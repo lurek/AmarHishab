@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: Auth Check
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper: Admin Check (Must be verified)
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.get('email', '') == 'sidr924@gmail.com';
+    }
+    
+    // System Config (Read-only for everyone, Write for Admin)
+    match /system/app_config {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      // Helper: Owner Check
+      function isOwner() {
+        return isAuthenticated() && request.auth.uid == userId;
+      }
+
+      // Owner can read/write their own profile
+      // Admin can read all profiles (required for broadcast)
+      allow read: if isOwner() || isAdmin();
+      allow write: if isOwner();
+
+      // Explicit Subcollections (Whitelisting for Security)
+      
+      match /system/{docId} {
+         allow read, write: if isOwner();
+      }
+      
+      match /expenses/{expenseId} {
+         allow read, write: if isOwner();
+      }
+      
+      match /recurring_templates/{templateId} {
+         allow read, write: if isOwner();
+      }
+      
+      match /savings/{goalId} {
+         allow read, write: if isOwner();
+      }
+      
+      match /ledgers/{ledgerId} {
+         allow read, write: if isOwner();
+         
+         match /history/{historyId} {
+            allow read, write: if isOwner();
+         }
+      }
+      
+      match /trash/{trashId} {
+         allow read, write: if isOwner();
+      }
+    }
+  }
+}

@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <title>AmarHishab</title>
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <link rel="stylesheet" href="style.css?v=3.8">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+</head>
+
+<body>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-container">
+        <div class="auth-card">
+            <div class="auth-header" style="text-align: center; margin-bottom: 20px;">
+                <h1 style="color: var(--primary-color); font-size: 1.8rem;"><i class="fas fa-wallet"></i> AmarHishab
+                </h1>
+                <p style="color: var(--secondary-color); font-size: 0.9rem;">আপনার ব্যক্তিগত হিসাবরক্ষক</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button id="show-login-tab" class="active">লগইন</button>
+                <button id="show-signup-tab">সাইন আপ</button>
+            </div>
+            <form id="login-form" class="auth-form">
+                <input type="email" id="login-email" placeholder="ইমেইল" required>
+                <input type="password" id="login-password" placeholder="পাসওয়ার্ড" required>
+                <div class="form-helper" style="text-align: right; margin-bottom: 15px;">
+                    <a href="#" id="forgot-password-link"
+                        style="color: var(--primary-color); font-size: 0.85rem; text-decoration: none;">পাসওয়ার্ড ভুলে
+                        গেছেন?</a>
+                </div>
+                <button type="submit">লগইন করুন</button>
+            </form>
+            <form id="signup-form" class="auth-form hidden">
+                <input type="text" id="signup-name" placeholder="আপনার নাম" required>
+                <input type="email" id="signup-email" placeholder="ইমেইল" required>
+                <input type="password" id="signup-password" placeholder="পাসওয়ার্ড" required>
+                <button type="submit">একাউন্ট তৈরি করুন</button>
+            </form>
+            <div class="demo-login-container" style="margin-top: 20px; text-align: center;">
+                <p style="margin-bottom: 10px; color: var(--secondary-color); font-size: 0.9rem;">অথবা</p>
+                <button id="demo-login-btn"
+                    style="background: var(--light-bg); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; width: 100%;">ডেমো
+                    একাউন্ট ব্যবহার করুন</button>
+            </div>
+
+            <div class="developer-credit-footer"
+                style="text-align: center; margin-top: 25px; font-size: 0.75rem; color: #aaa; border-top: 1px solid #eee; padding-top: 15px;">
+                <p>Developed by <a href="https://www.facebook.com/tanviras615" target="_blank"
+                        style="color: var(--primary-color); text-decoration: none; font-weight: 600;">MD.Tanvir Ahamed
+                        Siddike</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SECTION -->
+    <div id="app-container" class="hidden">
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 id="page-title" class="brand-logo"><i class="fas fa-wallet"></i> AmarHishab</h1>
+            </div>
+            <div class="header-right">
+                <button id="mode-toggle" aria-label="Toggle dark mode" style="pointer-events: auto;"><i
+                        class="fas fa-moon"></i></button>
+                <button id="profile-btn" aria-label="Profile" style="pointer-events: auto;"><i
+                        class="fas fa-user-circle"></i></button>
+            </div>
+        </header>
+
+        <!-- Scrollable Main Content -->
+        <main class="app-content">
+
+            <!-- VIEW: HOME (Dashboard) -->
+            <div id="view-home" class="view-section active">
+                <div class="welcome-section">
+                    <h2 class="welcome-title">স্বাগতম, <span id="welcome-user-name" class="text-primary">User</span>! 👋
+                    </h2>
+                    <p class="welcome-subtitle">আপনার আজকের আয়-ব্যয়ের হিসাব</p>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="balance-card">
+                    <div class="balance-header-row">
+                        <h4>বর্তমান ব্যালেন্স</h4>
+                        <button id="toggle-balance-visibility" class="balance-toggle-btn" aria-label="Toggle Balance Visibility" title="ব্যালেন্স লুকান/দেখান">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="balance-amount">৳<span id="current-balance">0</span></div>
+
+                    <div class="stats-container">
+                        <!-- Group 1: Month -->
+                        <div class="stat-group">
+                            <h5>চলতি মাস</h5>
+                            <div class="stat-row">
+                                <span style="opacity:0.8;">আয়</span>
+                                <span class="text-success">+৳<span id="current-month-income">0</span></span>
+                            </div>
+                            <div class="stat-row">
+                                <span style="opacity:0.8;">খরচ</span>
+                                <span class="text-danger">-৳<span id="current-month-expense">0</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Group 2: Lifetime -->
+                        <div class="stat-group">
+                            <h5>সর্বমোট</h5>
+                            <div class="stat-row">
+                                <span style="opacity:0.8;">আয়</span>
+                                <span class="text-success">+৳<span id="total-income">0</span></span>
+                            </div>
+                            <div class="stat-row">
+                                <span style="opacity:0.8;">খরচ</span>
+                                <span class="text-danger">-৳<span id="total-expense">0</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Group 3: Debt -->
+                        <div class="stat-group">
+                            <h5>দেনা-পাওনা</h5>
+                            <div class="stat-row">
+                                <span style="opacity:0.8;">পাবেন</span>
+                                <span class="text-success">+৳<span id="total-owed">0</span></span>
+                            </div>
+                            <div class="stat-row">
+                                <span style="opacity:0.8;">দিতে হবে</span>
+                                <span class="text-danger">-৳<span id="total-i-owe">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modern Quick Actions Bar -->
+                <div class="quick-actions-bar">
+                    <button class="quick-action-chip" id="quick-add-expense" type="button">
+                        <div class="qa-icon expense"><i class="fas fa-arrow-down"></i></div>
+                        <span>খরচ</span>
+                    </button>
+                    <button class="quick-action-chip" id="quick-add-income" type="button">
+                        <div class="qa-icon income"><i class="fas fa-arrow-up"></i></div>
+                        <span>আয়</span>
+                    </button>
+                    <button class="quick-action-chip" id="quick-add-transfer" type="button">
+                        <div class="qa-icon transfer"><i class="fas fa-exchange-alt"></i></div>
+                        <span>স্থানান্তর</span>
+                    </button>
+                    <button class="quick-action-chip" id="quick-go-debt" type="button">
+                        <div class="qa-icon debt"><i class="fas fa-handshake"></i></div>
+                        <span>দেনা-পাওনা</span>
+                    </button>
+                </div>
+
+                <!-- Monthly Comparison Card -->
+                <div id="comparison-card" class="chart-section"
+                    style="padding:15px; margin-bottom:20px; border-radius:12px; background:var(--card-bg); box-shadow:var(--shadow-sm);">
+                    <h5 style="margin:0 0 10px 0; font-size:0.9rem; color:var(--secondary-color);">খরচের তুলনা (গত মাস
+                        vs এই মাস)</h5>
+                    <div id="expense-comparison">
+                        <!-- Injected by JS -->
+                        <div class="skeleton-loader" style="height:40px;"></div>
+                    </div>
+                </div>
+
+                <!-- NEW: Budget Progress Card -->
+                <div id="budget-card" class="chart-section" style="cursor: pointer;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3>মাসিক বাজেট</h3>
+                        <span id="budget-status-text" style="font-size: 0.85rem; font-weight: 500;">0% খরচ</span>
+                    </div>
+                    <div class="progress-container"
+                        style="background: var(--light-border); border-radius: 10px; height: 10px; overflow: hidden;">
+                        <div id="budget-progress-bar"
+                            style="background: var(--primary-color); height: 100%; width: 0%; transition: width 0.5s ease;">
+                        </div>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.8rem; color: var(--secondary-color);">
+                        <span>খরচ: ৳<span id="budget-spent">0</span></span>
+                        <span>লিমিট: ৳<span id="budget-limit-display">0</span></span>
+                    </div>
+                </div>
+
+                <!-- Budget Alert -->
+                <div id="budget-alert" class="alert-box error hidden">
+                    <i class="fas fa-exclamation-triangle"></i> সতর্কতা: মাসিক বাজেট অতিক্রান্ত!
+                </div>
+
+                <!-- Charts Area -->
+                <section id="expenses-chart-section" class="chart-section">
+                    <h3>খরচের বিবরণ (চলতি মাস)</h3>
+                    <div class="chart-container">
+                        <canvas id="expenses-chart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Savings Review (New) -->
+                <section class="home-savings-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3>সেভিংস গোল</h3>
+                        <button id="view-all-savings"
+                            style="background:none; border:none; color:var(--primary-color); font-size:0.8rem; cursor:pointer;">সবগুলো</button>
+                    </div>
+                    <div id="home-savings-list" class="horizontal-scroll-container">
+                        <!-- Savings items will be injected here -->
+                    </div>
+                </section>
+
+                <!-- Top Expenses -->
+                <section class="top-expenses-section">
+                    <h3>শীর্ষ খরচসমূহ</h3>
+                    <ul id="top-expense-list" class="simple-list"></ul>
+                </section>
+
+
+            </div>
+
+            <!-- VIEW: HISTORY (Transactions) -->
+            <div id="view-history" class="view-section">
+                <div class="view-header-mobile hidden-desktop">
+                    <h3>হিস্ট্রি</h3>
+                </div>
+                <!-- Filters -->
+                <div class="filter-bar">
+                    <input type="month" id="filter-date">
+                    <select id="filter-account">
+                        <option value="">সকল একাউন্ট</option>
+                        <!-- Accounts populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Extra Filter for Type -->
+                <div class="filter-bar">
+                    <select id="filter-type">
+                        <option value="">সকল লেনদেন</option>
+                        <option value="income">আয়</option>
+                        <option value="expense">খরচ</option>
+                    </select>
+                    <select id="filter-sort">
+                        <option value="" disabled selected>সাজানোর ধরন</option>
+                        <option value="amount-desc">টাকা (বেশি থেকে কম)</option>
+                        <option value="amount-asc">টাকা (কম থেকে বেশি)</option>
+                        <option value="date-desc">তারিখ (নতুন থেকে পুরাতন)</option>
+                        <option value="date-asc">তারিখ (পুরাতন থেকে নতুন)</option>
+                    </select>
+                </div>
+
+                <!-- View Mode Select -->
+                <div class="filter-bar type-switcher"
+                    style="padding: 0; box-shadow: none; margin-bottom: 20px; background: transparent;">
+                    <button class="type-btn view-mode-btn active" data-view="detailed"
+                        style="flex: 1; border-radius: 8px;">বিস্তারিত (Detailed)</button>
+                    <button class="type-btn view-mode-btn" data-view="simplified"
+                        style="flex: 1; border-radius: 8px;">সংক্ষিপ্ত (Simplified)</button>
+                </div>
+
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="লেনদেন খুঁজুন...">
+                </div>
+
+                <!-- List -->
+                <ul id="main-transaction-list" class="transaction-list"></ul>
+
+                <!-- Pagination / Load More -->
+                <!-- Pagination System -->
+                <div class="pagination-controls"
+                    style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px;">
+                    <button id="prev-page-btn" class="secondary-btn" disabled><i class="fas fa-arrow-left"></i>
+                        পূর্ববর্তী</button>
+                    <span id="page-info" style="font-weight: 500; font-size: 0.9rem;">পৃষ্ঠা ১</span>
+                    <button id="next-page-btn" class="secondary-btn" disabled>পরবর্তী <i
+                            class="fas fa-arrow-right"></i></button>
+                </div>
+                <p id="no-more-data" class="hidden text-center mt-2"
+                    style="font-size: 0.8rem; color: var(--secondary-color);">
+                    আর কোন তথ্য নেই</p>
+            </div>
+
+            <!-- VIEW: DEBT (Ledger) -->
+            <div id="view-debt" class="view-section">
+                <div class="view-header-mobile hidden-desktop">
+                    <h3>দেনা-পাওনা</h3>
+                </div>
+                <div class="debt-summary">
+                    <div class="debt-card lend">
+                        <span>পাওনা</span>
+                        <h4 id="debt-view-total-owed">৳0</h4>
+                    </div>
+                    <div class="debt-card borrow">
+                        <span>দেনা</span>
+                        <h4 id="debt-view-total-i-owe">৳0</h4>
+                    </div>
+                </div>
+                <div class="action-bar" style="margin-bottom: 15px; text-align: right;">
+                    <button id="refresh-debt" class="primary-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i
+                            class="fas fa-sync"></i> রিফ্রেশ</button>
+                </div>
+                <h3 class="section-title">লেনদেনকারী তালিকা</h3>
+                <ul id="debt-list" class="transaction-list"></ul>
+            </div>
+
+            <!-- VIEW: RECURRING (New Feature) -->
+            <div id="view-recurring" class="view-section">
+                <div class="view-header-mobile hidden-desktop">
+                    <h3>পুনরাবৃত্তমূলক খরচ</h3>
+                </div> <!-- Fixed Typo -->
+                <div class="info-banner">
+                    <i class="fas fa-clock"></i>
+                    <p>মাসিক নিয়মিত খরচগুলো এখানে সেট করুন। প্রতি মাসে এগুলো অটোমেটিক যুক্ত হবে।</p>
+                </div>
+                <ul id="recurring-list" class="transaction-list"></ul>
+                <div id="empty-recurring" class="empty-state hidden">
+                    <p>কোন পুনরাবৃত্তমূলক খরচ নেই</p>
+                </div>
+            </div>
+
+            <!-- VIEW: ADMIN (Hidden by default via view-section) -->
+            <div id="view-admin" class="view-section">
+                <div class="view-header-mobile hidden-desktop">
+                    <h3>অ্যাডমিন প্যানেল</h3>
+                </div>
+                <div class="card" style="padding: 20px;">
+                    <h4>ব্রডকাস্টিং মেসেজ</h4>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">সকল ব্যবহারকারীকে ইমেইল পাঠান</p>
+
+                    <textarea id="broadcast-msg" placeholder="এখানে মেসেজ লিখুন..."
+                        style="width: 100%; height: 100px; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd;"></textarea>
+
+                    <textarea id="manual-email-list"
+                        placeholder="ম্যানুয়াল ইমেইল লিস্ট (কমা বা নতুন লাইন দিয়ে আলাদা করুন)..."
+                        style="width: 100%; height: 60px; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: monospace; font-size: 0.8rem;"></textarea>
+
+                    <button id="btn-broadcast" class="primary-btn full-width">সবার কাছে ইমেইল পাঠান</button>
+
+                    <div id="broadcast-status"
+                        style="background: #f8f9fa; padding: 10px; margin-top: 15px; border-radius: 6px; height: 150px; overflow-y: auto; font-size: 0.85rem; display: none; border: 1px solid #eee;">
+                        <!-- Logs here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: MENU (More) -->
+            <div id="view-menu" class="view-section">
+                <div class="view-header-mobile hidden-desktop">
+                    <h3>মেনু</h3>
+                </div>
+                <div class="menu-grid">
+                    <button class="menu-item" id="menu-categories">
+                        <i class="fas fa-tags color-1"></i>
+                        <span>ক্যাটাগরি</span>
+                    </button>
+                    <button class="menu-item" id="menu-accounts">
+                        <i class="fas fa-wallet color-2"></i>
+                        <span>একাউন্টস</span>
+                    </button>
+                    <button class="menu-item" id="menu-savings">
+                        <i class="fas fa-piggy-bank color-3"></i>
+                        <span>সেভিংস গোল</span>
+                    </button>
+                    <button class="menu-item" id="menu-budget">
+                        <i class="fas fa-chart-line color-4"></i>
+                        <span>মাসিক বাজেট</span>
+                    </button>
+                    <button class="menu-item" id="menu-export">
+                        <i class="fas fa-file-export color-5"></i>
+                        <span>এক্সপোর্ট</span>
+                    </button>
+                    <button class="menu-item" id="menu-trash">
+                        <i class="fas fa-trash-restore color-trash"></i>
+                        <span>রিসাইকেল বিন</span>
+                        <span id="trash-badge-count" class="menu-badge hidden">0</span>
+                    </button>
+                    <button class="menu-item" id="menu-sms-parser">
+                        <i class="fas fa-comment-dollar color-sms"></i>
+                        <span>SMS পার্সার</span>
+                    </button>
+                    <button class="menu-item" id="menu-settings">
+                        <i class="fas fa-cog color-6"></i>
+                        <span>সেটিংস</span>
+                    </button>
+                    <a href="https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk" class="menu-item" target="_blank"
+                        id="menu-download-apk">
+                        <i class="fab fa-android color-7"></i>
+                        <span>APK ডাউনলোড (v3.8)</span>
+                    </a>
+                    <button class="menu-item" id="menu-logout">
+                        <i class="fas fa-sign-out-alt color-8"></i>
+                        <span>লগআউট</span>
+                    </button>
+                    <button class="menu-item hidden" id="menu-admin">
+                        <i class="fas fa-user-shield color-8" style="color:#d63384;"></i>
+                        <span>Admin</span>
+                    </button>
+                </div>
+
+                <!-- Developer Credit Footer (Menu Only) -->
+                <div class="developer-credit-footer"
+                    style="text-align: center; margin-top: 30px; padding-bottom: 20px; font-size: 0.75rem; color: #888;">
+                    <p>Developed by <a href="https://www.facebook.com/tanviras615" target="_blank"
+                            style="color: var(--primary-color); text-decoration: none; font-weight: 600;">MD.Tanvir
+                            Ahamed
+                            Siddike</a></p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FLOATING ACTION BUTTON -->
+        <button id="fab-add-transaction" class="fab" aria-label="Add Transaction">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="home">
+                <i class="fas fa-home"></i>
+                <span>হোম</span>
+            </button>
+            <button class="nav-item" data-target="history">
+                <i class="fas fa-list"></i>
+                <span>লেনদেনের ইতিহাস</span>
+            </button>
+            <button class="nav-item" data-target="debt">
+                <i class="fas fa-handshake"></i>
+                <span>দেনা-পাওনা</span>
+            </button>
+            <button class="nav-item" data-target="recurring">
+                <i class="fas fa-sync-alt"></i>
+                <span style="font-size: 0.65rem;">পুনরাবৃত্তমূলক খরচ</span>
+            </button>
+            <button class="nav-item" data-target="menu">
+                <i class="fas fa-th-large"></i>
+                <span>মেনু</span>
+            </button>
+        </nav>
+
+    </div>
+
+
+
+    <!-- MODALS SECTION -->
+    <!-- Unified Add Transaction Modal (Bottom Sheet Style) -->
+    <div id="add-transaction-modal" class="modal bottom-sheet">
+        <div class="modal-content">
+            <div class="sheet-drag-handle"></div>
+            <div class="modal-header">
+                <h3>নতুন লেনদেন</h3>
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+
+            <div class="type-switcher">
+                <button class="type-btn active" data-type="expense">খরচ</button>
+                <button class="type-btn" data-type="income">আয়</button>
+                <button class="type-btn" data-type="transfer">স্থানান্তর</button>
+                <button class="type-btn" data-type="debt">ধার/দেনা</button>
+                <button class="type-btn" data-type="recurring">রিকারিং</button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" id="t-name" placeholder="বিবরণ / নাম" required list="debt-names">
+                <datalist id="debt-names"></datalist>
+
+                <!-- Quick Amount Chips -->
+                <div class="quick-amount-chips">
+                    <button type="button" class="amount-chip" data-amount="100">+১০০</button>
+                    <button type="button" class="amount-chip" data-amount="500">+৫০০</button>
+                    <button type="button" class="amount-chip" data-amount="1000">+১০০০</button>
+                    <button type="button" class="amount-chip" data-amount="2000">+২০০০</button>
+                    <button type="button" class="amount-chip" data-amount="5000">+৫০০০</button>
+                </div>
+
+                <input type="number" id="t-amount" placeholder="পরিমাণ (৳)" required>
+                <input type="date" id="t-date" required>
+
+                <select id="t-account">
+                    <option value="" disabled selected>উৎস একাউন্ট (From Account)</option>
+                </select>
+
+                <!-- Transfer Specific -->
+                <div id="field-transfer" class="conditional-field hidden">
+                    <select id="t-transfer-to-account">
+                        <option value="" disabled selected>গন্তব্য একাউন্ট (To Account)</option>
+                    </select>
+                </div>
+
+                <!-- Expense Specific -->
+                <div id="field-category" class="conditional-field">
+                    <select id="t-category">
+                        <option value="" disabled selected>ক্যাটাগরি</option>
+                    </select>
+                </div>
+
+                <!-- Debt Specific -->
+                <div id="field-debt" class="conditional-field hidden">
+                    <select id="t-debt-type">
+                        <option value="lend">পাওনা (Lend)</option>
+                        <option value="borrow">দেনা (Borrow)</option>
+                    </select>
+
+                    <!-- Optional Contact & Due Date Inputs -->
+                    <div style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 0.8rem; font-weight: 600; color: var(--secondary-color);">কন্টাক্ট ও নোটিফিকেশন তথ্য (ঐচ্ছিক)</label>
+                            <button type="button" id="toggle-debt-contact-fields" style="background: none; border: none; font-size: 0.75rem; color: var(--primary-color); cursor: pointer;"><i class="fas fa-plus-circle"></i> তথ্য দিন</button>
+                        </div>
+                        <div id="debt-optional-contact-inputs" class="hidden">
+                            <input type="tel" id="t-debt-phone" placeholder="📱 মোবাইল নম্বর (SMS এর জন্য)">
+                            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                                <input type="tel" id="t-debt-whatsapp" placeholder="💬 WhatsApp নম্বর" style="flex: 1; margin-bottom: 0;">
+                                <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--secondary-color); cursor: pointer;">
+                                    <input type="checkbox" id="t-debt-same-as-phone"> একই নম্বর
+                                </label>
+                            </div>
+                            <input type="email" id="t-debt-email" placeholder="✉️ ইমেইল এড্রেস">
+                            <label style="font-size: 0.76rem; color: var(--secondary-color); display: block; margin-top: 6px; margin-bottom: 2px;">📅 টাকা ফেরতের সম্ভাব্য তারিখ (Due Date):</label>
+                            <input type="date" id="t-debt-due-date">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="save-transaction-btn" class="primary-btn full-width">সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal (Improved Design) -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>লেনদেন এডিট</h3>
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+            <input type="hidden" id="edit-id">
+
+            <label style="font-size: 0.85rem; color: var(--secondary-color);">নাম / বিবরণ</label>
+            <input type="text" id="edit-name">
+
+            <div class="inline-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--secondary-color);">পরিমাণ</label>
+                    <input type="number" id="edit-amount">
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--secondary-color);">তারিখ</label>
+                    <input type="date" id="edit-date">
+                </div>
+            </div>
+
+            <label style="font-size: 0.85rem; color: var(--secondary-color);">একাউন্ট</label>
+            <select id="edit-account"></select>
+
+            <label style="font-size: 0.85rem; color: var(--secondary-color);">ক্যাটাগরি</label>
+            <select id="edit-category"></select>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button id="save-edit-btn" class="primary-btn" style="flex: 2;">আপডেট করুন</button>
+                <button id="delete-transaction-btn"
+                    style="flex: 1; background:var(--danger-color); color:white; padding:12px; border:none; border-radius:8px; cursor: pointer;"><i
+                        class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Recurring Modal (New) -->
+    <div id="edit-recurring-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>রিকারিং আপডেট</h2>
+            <input type="hidden" id="edit-rec-id">
+            <input type="text" id="edit-rec-name" placeholder="নাম">
+            <input type="number" id="edit-rec-amount" placeholder="পরিমাণ">
+            <label>পরবর্তী তারিখ:</label>
+            <input type="date" id="edit-rec-date">
+            <button id="save-rec-edit-btn" class="primary-btn full-width">আপডেট</button>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>ক্যাটাগরি</h2>
+            <div class="inline-form">
+                <input type="text" id="new-cat-name" placeholder="নতুন ক্যাটাগরি">
+                <button id="add-cat-btn" class="primary-btn">যোগ</button>
+            </div>
+            <ul id="category-list" class="manage-list"></ul>
+        </div>
+    </div>
+
+    <!-- Account Modal -->
+    <div id="account-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>একাউন্টস</h2>
+            <div class="inline-form">
+                <input type="text" id="new-acc-name" placeholder="নতুন একাউন্ট">
+                <button id="add-acc-btn" class="primary-btn">যোগ</button>
+            </div>
+            <ul id="account-list" class="manage-list"></ul>
+        </div>
+    </div>
+
+    <!-- Savings Modal -->
+    <div id="savings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>সেভিংস গোল</h2>
+            <div class="inline-form">
+                <input type="text" id="new-goal-name" placeholder="লক্ষ্য (যেমন: ফোন)">
+                <input type="number" id="new-goal-target" placeholder="টাকা">
+                <button id="add-goal-btn" class="primary-btn">যোগ</button>
+            </div>
+            <ul id="manage-goal-list" class="manage-list" style="margin-top: 15px;"></ul>
+        </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budget-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>মাসিক বাজেট</h2>
+            <p style="margin-bottom: 10px; color: var(--secondary-color);">এই মাসের জন্য আপনার খরচের সর্বোচ্চ সীমা
+                নির্ধারণ করুন।</p>
+            <input type="number" id="budget-limit-input" placeholder="বাজেট লিমিট (৳)">
+            <button id="save-budget-btn" class="primary-btn full-width">সেভ করুন</button>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>ডাটা এক্সপোর্ট & রিপোর্ট</h2>
+            <p style="margin-bottom: 20px; color:var(--secondary-color); font-size: 0.9rem;">আপনার লেনদেনের রিপোর্ট তৈরি
+                করুন</p>
+
+            <!-- Date Filter -->
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block;">সময়সীমা:</label>
+                <div class="export-options">
+                    <label class="export-pill">
+                        <input type="radio" name="export-period" value="this-month" checked>
+                        <span>এই মাস</span>
+                    </label>
+                    <label class="export-pill">
+                        <input type="radio" name="export-period" value="last-month">
+                        <span>গত মাস</span>
+                    </label>
+                    <label class="export-pill">
+                        <input type="radio" name="export-period" value="all">
+                        <span>সব</span>
+                    </label>
+                    <label class="export-pill">
+                        <input type="radio" name="export-period" value="custom">
+                        <span>কাস্টম</span>
+                    </label>
+                </div>
+                <div id="export-custom-date" class="hidden"
+                    style="display: flex; gap: 10px; margin-top: 15px; align-items: center;">
+                    <input type="date" id="export-start-date"
+                        style="padding: 8px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); flex:1;">
+                    <span style="font-size: 0.9rem; color: var(--secondary-color);">থেকে</span>
+                    <input type="date" id="export-end-date"
+                        style="padding: 8px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); flex:1;">
+                </div>
+            </div>
+
+            <!-- Type Filter -->
+            <div style="text-align: left; margin-bottom: 25px;">
+                <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block;">ধরন:</label>
+                <div class="export-options">
+                    <label class="export-pill">
+                        <input type="checkbox" id="exp-type-income" checked>
+                        <span>আয়</span>
+                    </label>
+                    <label class="export-pill">
+                        <input type="checkbox" id="exp-type-expense" checked>
+                        <span>খরচ</span>
+                    </label>
+                    <label class="export-pill">
+                        <input type="checkbox" id="exp-type-debt" checked>
+                        <span>দেনা-পাওনা</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <button id="print-report-btn" class="primary-btn full-width"
+                style="margin-bottom: 15px; background: #6610f2; padding: 12px; font-size: 1rem;"><i
+                    class="fas fa-print"></i> প্রিন্ট / সেভ PDF (বাংলা)</button>
+
+            <div style="display: flex; gap: 15px;">
+                <button id="export-excel-btn" class="primary-btn"
+                    style="flex:1; background: #28a745; font-size: 0.9rem;"><i class="fas fa-file-excel"></i>
+                    Excel</button>
+                <button id="export-pdf-btn" class="primary-btn"
+                    style="flex:1; background: #dc3545; font-size: 0.9rem;"><i class="fas fa-file-pdf"></i> PDF</button>
+            </div>
+
+            <div
+                style="margin-top: 20px; font-size: 0.7rem; color: #888; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <p>Developed by <a href="https://www.facebook.com/tanviras615" target="_blank"
+                        style="color: var(--primary-color); text-decoration: none; font-weight: 600;">MD.Tanvir Ahamed
+                        Siddike</a></p>
+            </div>
+            <p style="text-align:center; font-size:0.8rem; color:var(--secondary-color); margin-top:10px;">রিপোর্টের
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" aria-label="Close">&times;</span>
+            <h2>সেটিংস</h2>
+
+            <div class="settings-section" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px; color: var(--secondary-color);">প্রোফাইল</h4>
+                <div class="inline-form">
+                    <input type="text" id="settings-name" placeholder="নাম">
+                    <button id="update-name-btn" class="primary-btn"><i class="fas fa-check"></i></button>
+                </div>
+                <div class="inline-form">
+                    <input type="email" id="settings-email" placeholder="ইমেইল">
+                    <button id="update-email-btn" class="primary-btn"><i class="fas fa-check"></i></button>
+                </div>
+                <!-- Removed Demo Login Container -->
+
+                <div class="settings-section" style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: var(--secondary-color);">নিরাপত্তা</h4>
+                    <div class="inline-form">
+                        <input type="password" id="settings-password" placeholder="নতুন পাসওয়ার্ড">
+                        <button id="update-pass-btn" class="primary-btn"><i class="fas fa-key"></i></button>
+                    </div>
+                </div>
+
+                <div class="settings-section" style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: var(--secondary-color);">পেমেন্ট ও নোটিফিকেশন সেটিংস</h4>
+                    <label style="font-size:0.8rem; color:var(--secondary-color);">ব্যক্তিগত বিকাশ / নগদ নম্বর (তাগাদায় যুক্ত হবে):</label>
+                    <div class="inline-form">
+                        <input type="tel" id="settings-payment-number" placeholder="যেমন: 017XXXXXXXX (Personal)">
+                        <button id="update-payment-number-btn" class="primary-btn"><i class="fas fa-check"></i></button>
+                    </div>
+
+                    <label style="font-size:0.8rem; color:var(--secondary-color); margin-top: 10px; display:block;">কাস্টম SMS API URL (ঐচ্ছিক - ক্লাউড SMS এর জন্য):</label>
+                    <div class="inline-form">
+                        <input type="text" id="settings-sms-api-url" placeholder="https://api.sms-provider.com/send?key=...">
+                        <button id="update-sms-api-btn" class="primary-btn"><i class="fas fa-check"></i></button>
+                    </div>
+                    <p style="font-size:0.75rem; color:grey; margin-top:4px;">* ফাঁকা রাখলে ফোনের নিজস্ব সিম কার্ড দিয়ে ফ্রি SMS পাঠানো হবে।</p>
+                </div>
+
+                <!-- Developer Profile Card -->
+                <div class="developer-profile-card">
+                    <div class="dev-avatar">
+                        <i class="fas fa-user-astronaut"></i>
+                    </div>
+                    <h4 style="margin-bottom: 4px; color: var(--light-text);">MD. Tanvir Ahamed Siddike</h4>
+                    <p style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600; margin-bottom: 8px;">Founder & Developer</p>
+                    <p style="font-size: 0.78rem; color: var(--secondary-color); margin-bottom: 12px;">AmarHishab ফিনটেক পার্সোনাল ফাইন্যান্স প্ল্যাটফর্ম</p>
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <a href="https://www.facebook.com/tanviras615" target="_blank" class="btn-debt-secondary" style="font-size: 0.76rem;">
+                            <i class="fab fa-facebook" style="color: #1877f2;"></i> Facebook
+                        </a>
+                        <a href="https://github.com/lurek/AmarHishab" target="_blank" class="btn-debt-secondary" style="font-size: 0.76rem;">
+                            <i class="fab fa-github"></i> GitHub
+                        </a>
+                    </div>
+                </div>
+
+                <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+
+                <button id="reset-app-btn"
+                    style="background: var(--light-bg); color: var(--danger-color); border: 1px solid var(--danger-color); width: 100%; padding: 10px; border-radius: 8px;">সকল
+                    ডাটা রিসেট করুন</button>
+
+                <button id="settings-logout-btn"
+                    style="background: var(--danger-color); color: white; width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; border: none; cursor: pointer;">লগআউট
+                    <i class="fas fa-sign-out-alt"></i></button>
+
+                <p id="app-version-display" style="text-align:center; font-size:0.8rem; color:grey; margin-top: 15px;">
+                    AmarHishab v3.8</p>
+            </div>
+        </div>
+    </div> <!-- Close settings-modal -->
+
+    <!-- Update Modal -->
+    <div id="update-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="display:flex; justify-content:flex-end;">
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+
+            <div class="update-rocket-wrapper">
+                <div class="update-rocket">
+                    <i class="fas fa-rocket"></i>
+                </div>
+            </div>
+
+            <h2 style="margin-top:15px; color: var(--primary-color);">নতুন আপডেট এসেছে!</h2>
+            <p id="update-release-notes"
+                style="margin: 15px 0; color: var(--secondary-color); font-size: 0.95rem; line-height: 1.5;">
+                some cool features...
+            </p>
+
+            <a id="update-link-btn" href="#" target="_blank" class="primary-btn full-width"
+                style="display:inline-block; text-decoration:none;">ডাউনলোড করুন</a>
+        </div>
+    </div>
+
+    <!-- Debt Details Modal (New & Improved) -->
+    <div id="debt-details-modal" class="modal">
+        <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+            <span class="close-btn" aria-label="Close">&times;</span>
+
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h2 id="debt-person-name" style="margin-bottom: 4px;">Person Name</h2>
+                <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                    <button id="edit-debt-name-btn"
+                        style="background: none; border: none; font-size: 0.8rem; color: var(--primary-color); cursor: pointer; text-decoration: underline;">নাম এডিট</button>
+                    <span style="color: var(--secondary-color); font-size: 0.75rem;">•</span>
+                    <button id="btn-open-contact-modal"
+                        style="background: none; border: none; font-size: 0.8rem; color: var(--primary-color); cursor: pointer; text-decoration: underline;"><i class="fas fa-address-card"></i> কন্টাক্ট এডিট</button>
+                </div>
+
+                <!-- Contact Badges Row -->
+                <div id="debt-contact-badges" class="contact-badge-row">
+                    <!-- Populated by script.js -->
+                </div>
+
+                <div class="balance-display" style="margin-top: 10px;">
+                    <span id="debt-status-badge"
+                        style="background: #eee; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">STATUS</span>
+                    <h1 id="debt-net-balance" style="font-size: 2.5rem; margin: 5px 0; color: var(--text-color);">৳0
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Add Transaction Section -->
+            <div class="transaction-add-box" style="padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <h4 style="margin-bottom: 10px; font-size: 0.9rem; opacity: 0.8;">নতুন লেনদেন যোগ করুন</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="number" id="debt-new-amount" placeholder="পরিমাণ" style="flex: 1;">
+                    <input type="date" id="debt-new-date" style="flex: 1;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-give-money" class="primary-btn"
+                        style="flex: 1; background: var(--success-color);">টাকা দিলাম (+)</button>
+                    <button id="btn-get-money" class="primary-btn"
+                        style="flex: 1; background: var(--danger-color);">টাকা পেলাম (-)</button>
+                </div>
+                <p style="font-size: 0.75rem; color: gray; margin-top: 5px; text-align: center;">
+                    * 'দিলাম' মানে আপনি পাবেন (পাওনা বাড়ে) | 'পেলাম' মানে দেনা বাড়ে/পরিশোধ হলো
+                </p>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button id="btn-debt-reminder" class="whatsapp-reminder-btn" type="button" style="flex: 1; margin-top: 0;">
+                        <i class="fab fa-whatsapp"></i> তাগাদা পাঠান
+                    </button>
+                    <button id="btn-debt-statement-pdf" class="btn-debt-secondary" type="button" style="padding: 10px 14px;">
+                        <i class="fas fa-file-pdf" style="color: #ef4444;"></i> খতিয়ান PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- History List -->
+            <h4 style="margin-bottom: 10px;">ইতিহাস</h4>
+            <ul id="debt-history-list" class="transaction-list" style="flex: 1; overflow-y: auto; min-height: 150px;">
+                <!-- History Items -->
+            </ul>
+
+            <input type="hidden" id="current-ledger-id">
+        </div>
+    </div>
+
+    <!-- Edit Person Contact Modal -->
+    <div id="debt-contact-modal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3>কন্টাক্ট ও নোটিফিকেশন তথ্য</h3>
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+            <p id="debt-contact-modal-subtitle" style="font-size: 0.85rem; color: var(--secondary-color); margin-bottom: 12px;"></p>
+            <input type="hidden" id="edit-contact-ledger-id">
+            
+            <label style="font-size: 0.8rem; color: var(--secondary-color);">মোবাইল নম্বর (SMS এর জন্য):</label>
+            <input type="tel" id="edit-contact-phone" placeholder="017XXXXXXXX">
+
+            <label style="font-size: 0.8rem; color: var(--secondary-color);">WhatsApp নম্বর:</label>
+            <input type="tel" id="edit-contact-whatsapp" placeholder="017XXXXXXXX">
+
+            <label style="font-size: 0.8rem; color: var(--secondary-color);">ইমেইল এড্রেস:</label>
+            <input type="email" id="edit-contact-email" placeholder="example@email.com">
+
+            <label style="font-size: 0.8rem; color: var(--secondary-color);">টাকা ফেরতের সম্ভাব্য তারিখ (Due Date):</label>
+            <input type="date" id="edit-contact-due-date">
+
+            <button id="save-debt-contact-btn" class="primary-btn full-width" style="margin-top: 14px;">কন্টাক্ট সেভ করুন</button>
+        </div>
+    </div>
+
+    <!-- Post-Save Smart Notification Action Sheet (Bottom Sheet) -->
+    <div id="notify-action-sheet-modal" class="modal bottom-sheet">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="sheet-drag-handle"></div>
+            <div class="modal-header" style="text-align: center; display: block; border-bottom: none; padding-bottom: 4px;">
+                <div style="font-size: 2.2rem; color: var(--success-color); margin-bottom: 4px;"><i class="fas fa-check-circle"></i></div>
+                <h3 style="margin-bottom: 4px;">লেনদেন সেভ হয়েছে!</h3>
+                <p id="notify-recipient-subtitle" style="font-size: 0.85rem; color: var(--secondary-color);">প্রাপককে ডিজিটাল ভাউচার নোটিফিকেশন পাঠান</p>
+            </div>
+
+            <div class="voucher-slip-preview" id="voucher-slip-preview-text"></div>
+
+            <div class="notify-action-grid">
+                <button id="btn-sheet-whatsapp" class="btn-notify-channel btn-notify-wa" type="button">
+                    <i class="fab fa-whatsapp" style="font-size: 1.25rem;"></i> WhatsApp এ স্লিপ পাঠান
+                </button>
+                <button id="btn-sheet-sms" class="btn-notify-channel btn-notify-sms" type="button">
+                    <i class="fas fa-comment-dots" style="font-size: 1.15rem;"></i> SMS পাঠান (SIM / Gateway)
+                </button>
+                <button id="btn-sheet-email" class="btn-notify-channel btn-notify-email" type="button">
+                    <i class="fas fa-envelope" style="font-size: 1.15rem;"></i> Email এ রসিদ পাঠান
+                </button>
+            </div>
+
+            <button id="btn-sheet-skip" type="button" style="background: none; border: none; color: var(--secondary-color); font-size: 0.85rem; width: 100%; padding: 12px; cursor: pointer; margin-top: 6px;">
+                এখন পাঠাবো না / স্কিপ করুন
+            </button>
+        </div>
+    </div>
+
+
+    <!-- APK Download Modal (Mobile Web Only) -->
+    <div id="apk-download-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="display:flex; justify-content:flex-end;">
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+            <i class="fab fa-android" style="font-size: 3rem; color: #76C893; margin-bottom: 20px;"></i>
+            <h3 style="margin-bottom: 10px;">অ্যাপটি ডাউনলোড করুন</h3>
+            <p style="color: var(--secondary-color); font-size: 0.9rem; margin-bottom: 20px;">
+                অফলাইন ব্যবহার এবং ভালো অভিজ্ঞতার জন্য আমাদের অ্যাপটি ডাউনলোড করুন।
+            </p>
+            <a href="https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk" target="_blank" class="primary-btn full-width"
+                style="display:inline-block; text-decoration:none;">
+                ডাউনলোড করুন (v3.8)
+            </a>
+        </div>
+    </div>
+
+    <!-- Trash / Recycle Bin Modal (New Feature) -->
+    <div id="trash-modal" class="modal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <div>
+                    <h3>রিসাইকেল বিন</h3>
+                    <p style="font-size: 0.78rem; color: var(--secondary-color); margin-top: 2px;">মুছে ফেলা রেকর্ড ৩০ দিন পর্যন্ত জমা থাকবে</p>
+                </div>
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px;">
+                <div class="type-switcher" style="margin-bottom: 0; flex: 1;">
+                    <button class="type-btn trash-filter-btn active" data-filter="all">সব</button>
+                    <button class="type-btn trash-filter-btn" data-filter="expense">খরচ/আয়</button>
+                    <button class="type-btn trash-filter-btn" data-filter="debt">দেনা-পাওনা</button>
+                    <button class="type-btn trash-filter-btn" data-filter="recurring">রিকারিং</button>
+                </div>
+                <button id="empty-trash-btn" class="empty-trash-btn" type="button"><i class="fas fa-trash-alt"></i> খালি করুন</button>
+            </div>
+
+            <div id="empty-trash-state" class="empty-state" style="text-align: center; padding: 30px 10px; display: none;">
+                <i class="fas fa-trash-restore" style="font-size: 2.5rem; color: var(--secondary-color); opacity: 0.4; margin-bottom: 10px;"></i>
+                <p style="color: var(--secondary-color); font-size: 0.9rem;">রিসাইকেল বিন সম্পূর্ণ খালি!</p>
+            </div>
+
+            <ul id="trash-items-list" style="max-height: 60vh; overflow-y: auto; list-style: none; padding: 0;">
+                <!-- Injected by script.js -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Smart SMS Parser Modal (New Feature) -->
+    <div id="sms-parser-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3>স্মার্ট SMS পার্সার</h3>
+                    <p style="font-size: 0.8rem; color: var(--secondary-color);">বিকাশ, নগদ বা ব্যাংকের SMS পেস্ট করলেই লেনদেন তৈরি হবে</p>
+                </div>
+                <span class="close-btn" aria-label="Close">&times;</span>
+            </div>
+            <textarea id="sms-input-text" placeholder="এখানে বিকাশ/নগদ/ব্যাংকের ট্রানজেকশন SMS পেস্ট করুন...&#10;যেমন: Cash In Tk 500.00 from 017... TrxID 9A8B7C at 06/09/2026" style="height: 110px; font-size: 0.88rem;"></textarea>
+            <button id="btn-parse-sms" class="primary-btn full-width" type="button" style="margin-top: 10px;">
+                <i class="fas fa-magic"></i> পার্স করুন ও যোগ করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5fIy5AkYHnLABj-Zw3JsSOWSbI9FcAF0",
+            authDomain: "jomakhoroch-5ac13.firebaseapp.com",
+            projectId: "jomakhoroch-5ac13",
+            storageBucket: "jomakhoroch-5ac13.appspot.com",
+            messagingSenderId: "227256881711",
+            appId: "1:227256881711:web:6fd14b69ec2cd4876a2cda",
+            measurementId: "G-47H1RDLXH0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var auth = firebase.auth();
+        var db = firebase.firestore();
+        db.enablePersistence()
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.log('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+                } else if (err.code == 'unimplemented') {
+                    console.log('The current browser does not support all of the features required to enable persistence');
+                }
+            });
+    </script>
+
+    <script src="script.js?v=3.8"></script>
+</body>
+
+</html>

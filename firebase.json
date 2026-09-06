@@ -1,0 +1,15 @@
+{
+  "hosting": {
+    "site": "amarhishab",
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.apk"
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

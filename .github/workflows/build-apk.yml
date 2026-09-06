@@ -1,0 +1,79 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Signed Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Grant Execute Permission to Gradlew
+        run: |
+          cd android
+          chmod +x gradlew
+
+      - name: Build Signed Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Find and Rename APK
+        run: |
+          mkdir -p build_output
+          cp android/app/build/outputs/apk/release/*-release.apk build_output/AmarHishab-Release.apk || cp android/app/build/outputs/apk/release/*.apk build_output/AmarHishab-Release.apk
+          ls -lh build_output/
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AmarHishab-Release-APK
+          path: build_output/
+          retention-days: 30
+
+      - name: Publish GitHub Release (Latest)
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v3.8
+          name: AmarHishab v3.8 Release
+          body: |
+            ## 💰 AmarHishab (আমারহিসাব) v3.8 Release
+            - সম্পূর্ণ আধুনিক ফিনটেক UI/UX রিডিজাইন (Hero Balance Card, Privacy Eye Toggle)
+            - ৩০ দিনের ট্র্যাশ / রিসাইকেল বিন সিস্টেম (১-ক্লিক রিস্টোর)
+            - দেনা-পাওনায় কন্টাক্ট ইনফো (ইমেইল, মোবাইল, হোয়াটসঅ্যাপ)
+            - মাল্টি-চ্যানেল ডিজিটাল ভাউচার নোটিফিকেশন (WhatsApp, SMS, Email)
+            - কাস্টমার খতিয়ান স্লিপ PDF
+            - একাউন্ট স্থানান্তর (Account Transfer)
+            - স্মার্ট SMS পার্সার
+            - স্ক্রিন পাঞ্চ-হোল কাটআউট সাপোর্ট
+          files: build_output/AmarHishab-Release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

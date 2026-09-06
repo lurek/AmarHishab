@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AmarHishab</string>
+    <string name="title_activity_main">AmarHishab</string>
+    <string name="package_name">com.amarhishab.manager</string>
+    <string name="custom_url_scheme">com.amarhishab.manager</string>
+    <string name="developer_name">MD. Tanvir Ahamed Siddike</string>
+    <string name="developer_contact">https://facebook.com/tanviras615</string>
+    <string name="app_repo">https://github.com/lurek/AmarHishab</string>
+</resources>
