@@ -177,7 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatCurrencyDisplay = (amount) => {
         if (isBalanceHidden) return '••••••';
         const num = parseFloat(amount) || 0;
-        return num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        const formatted = Math.abs(num).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        return num < 0 ? `-৳${formatted}` : `৳${formatted}`;
     };
 
     const updateBalanceDisplay = () => {
@@ -278,8 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
 
-                    // Update System Check
-                    checkAppVersion();
 
                 } catch (err) {
                     console.error("Initialization warning:", err); // Log but continue
@@ -852,38 +854,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- IN-APP UPDATE SYSTEM ---
-    const checkAppVersion = async () => {
-        try {
-            const doc = await db.collection('system').doc('app_config').get();
-            if (doc.exists) {
-                const data = doc.data();
-                if (data.latestVersion && data.latestVersion !== APP_VERSION) {
-                    // Update Available
-                    const modal = document.getElementById('update-modal');
-                    const notes = document.getElementById('update-release-notes');
-                    const btn = document.getElementById('update-link-btn');
-
-                    notes.innerText = data.releaseNotes || "New features and bug fixes!";
-                    btn.href = data.updateLink || "#";
-
-                    modal.classList.add('open');
-
-                    const closeBtn = modal.querySelector('.close-btn');
-                    if (closeBtn) {
-                        // Use onclick to avoid duplicate listeners without destroying the node
-                        closeBtn.onclick = () => {
-                            modal.classList.remove('open');
-                        };
-                    }
-                }
-            }
-        } catch (e) {
-            console.log("Version check failed", e);
-        }
-    };
-
-
     // --- TRANSACTIONS & PAGINATION ---
 
     // --- TRANSACTIONS & PAGINATION ---
@@ -1073,11 +1043,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display: flex; gap: 15px; text-align: right;">
                 ${totals.totalExpense > 0 ? `<div>
                     <div style="font-size: 0.7rem; color: var(--secondary-color);">মোট খরচ</div>
-                    <div class="amount-expense" style="font-size: 0.95rem; font-weight: 600;">-৳${totals.totalExpense}</div>
+                    <div class="amount-expense" style="font-size: 0.95rem; font-weight: 600;">-৳${(parseFloat(totals.totalExpense) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>` : ''}
                 ${totals.totalIncome > 0 ? `<div>
                     <div style="font-size: 0.7rem; color: var(--secondary-color);">মোট আয়</div>
-                    <div class="amount-income text-success" style="font-size: 0.95rem; font-weight: 600;">+৳${totals.totalIncome}</div>
+                    <div class="amount-income text-success" style="font-size: 0.95rem; font-weight: 600;">+৳${(parseFloat(totals.totalIncome) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>` : ''}
             </div>
         `;
@@ -1093,13 +1063,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let amountsHtml = '';
         if (data.totalExpense > 0) {
-            amountsHtml += `<div class="amount-expense" style="font-size:0.9rem; margin-bottom: 2px;">-৳${data.totalExpense}</div>`;
+            amountsHtml += `<div class="amount-expense" style="font-size:0.9rem; margin-bottom: 2px;">-৳${(parseFloat(data.totalExpense) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
         }
         if (data.totalIncome > 0) {
-            amountsHtml += `<div class="amount-income text-success" style="font-size:0.9rem;">+৳${data.totalIncome}</div>`;
+            amountsHtml += `<div class="amount-income text-success" style="font-size:0.9rem;">+৳${(parseFloat(data.totalIncome) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
         }
         if (amountsHtml === '') {
-            amountsHtml = `<div style="font-size:0.9rem; color:gray;">৳0</div>`;
+            amountsHtml = `<div style="font-size:0.9rem; color:gray;">৳0.00</div>`;
         }
 
         li.innerHTML = `
@@ -1252,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <span class="item-amount ${colorClass}">${sign}৳${data.amount}</span>
+                <span class="item-amount ${colorClass}">${sign}৳${(parseFloat(data.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 <button onclick="editTransaction('${data.id}')" style="background:none; border:none; color:var(--primary-color); cursor:pointer;"><i class="fas fa-edit"></i></button>
                 <button onclick="deleteTransaction('${data.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer;"><i class="fas fa-trash"></i></button>
             </div>
@@ -1375,7 +1345,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeSetText = (id, text) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.innerText = typeof text === 'number' ? (Math.round(text * 100) / 100).toLocaleString('en-IN') : text;
+                    if (typeof text === 'number') {
+                        el.innerText = text.toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    } else {
+                        el.innerText = text;
+                    }
                 }
             };
 
@@ -1632,80 +1609,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // PDF Export
     document.getElementById('export-pdf-btn').addEventListener('click', async () => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const rawData = await fetchExportData();
-
-        // Calculate Summary
-        let totalIncome = 0, totalExpense = 0;
-        const data = rawData.map(t => {
-            const amt = parseFloat(t.amount) || 0;
-            if (t.type === 'income') totalIncome += amt;
-            else if (t.type === 'expense') totalExpense += amt;
-
-            return [
-                t.date || '',
-                t.name || '',
-                t.type === 'income' ? 'Income' : (t.type === 'expense' ? 'Expense' : 'Debt'), // English for PDF mostly
-                t.amount || 0,
-                t.account || '',
-                t.category || ''
-            ];
-        });
-        const balance = totalIncome - totalExpense;
-
-        // Header
-        doc.setFontSize(18);
-        doc.text("AmarHishab - Transaction Report", 105, 15, null, null, "center");
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 22, null, null, "center");
-
-        // Summary Box
-        doc.setDrawColor(200);
-        doc.setFillColor(245, 245, 245);
-        doc.rect(14, 30, 182, 15, 'F');
-        doc.setTextColor(0);
-        doc.setFontSize(11);
-        doc.text(`Total Income: ${totalIncome}`, 20, 40);
-        doc.text(`Total Expense: ${totalExpense}`, 80, 40);
-        doc.text(`Balance: ${balance}`, 150, 40);
-
-        // Table
-        doc.autoTable({
-            head: [['Date', 'Name', 'Type', 'Amount', 'Account', 'Category']],
-            body: data,
-            startY: 55,
-            styles: { font: "helvetica", overflow: 'linebreak', fontSize: 9 },
-            headStyles: { fillColor: [41, 128, 185] },
-            columnStyles: {
-                0: { cellWidth: 25 },
-                1: { cellWidth: 'auto' },
-                2: { cellWidth: 20 },
-                3: { cellWidth: 20 },
-                4: { cellWidth: 25 },
-                5: { cellWidth: 25 }
-            }
-        });
-
-        // Robust Footer Logic (Manual Loop)
-        try {
-            const pageCount = doc.internal.getNumberOfPages();
-            const pageSize = doc.internal.pageSize;
-            const pageHeight = (pageSize && pageSize.height) ? pageSize.height : 297; // Default A4 height
-
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text("Developed by MD.Tanvir Ahamed Siddike - fb.com/tanviras615", 105, pageHeight - 10, null, null, "center");
-            }
-        } catch (e) {
-            console.error("Footer Error:", e);
+        if (typeof generateTransactionReport === 'function') {
+            await generateTransactionReport();
         }
-
-        doc.save(getFilename('pdf'));
-        showToast("PDF ডাউনলোড শুরু হয়েছে...");
     });
 
     // Excel Export
@@ -1788,90 +1694,247 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // Print Report (Native Browser Print for Clean Bangla)
-    document.getElementById('print-report-btn').addEventListener('click', async () => {
+    // Print & PDF Report Generator (Clean Native Bengali Support)
+    const generateTransactionReport = async () => {
         const rawData = await fetchExportData();
         if (rawData.length === 0) return showToast("কোন ডাটা পাওয়া যায়নি", "error");
 
         let totalIncome = 0, totalExpense = 0;
-
-        // Build HTML Table
         let rows = '';
+        let sl = 1;
+
         rawData.forEach(t => {
             const amt = parseFloat(t.amount) || 0;
             if (t.type === 'income') totalIncome += amt;
             else if (t.type === 'expense') totalExpense += amt;
 
+            const amtFormatted = `৳${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            let typeBadge = '';
+            if (t.type === 'income') {
+                typeBadge = '<span style="color:#059669; font-weight:600; background:rgba(5,150,105,0.1); padding:2px 8px; border-radius:4px;">আয়</span>';
+            } else if (t.type === 'expense') {
+                typeBadge = '<span style="color:#dc2626; font-weight:600; background:rgba(220,38,38,0.1); padding:2px 8px; border-radius:4px;">খরচ</span>';
+            } else {
+                typeBadge = '<span style="color:#2563eb; font-weight:600; background:rgba(37,99,235,0.1); padding:2px 8px; border-radius:4px;">দেনা/পাওনা</span>';
+            }
+
             rows += `
-                <tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding: 8px;">${t.date}</td>
-                    <td style="padding: 8px;">${t.name}</td>
-                    <td style="padding: 8px;">${t.type === 'income' ? 'আয়' : (t.type === 'expense' ? 'খরচ' : 'দেনা/পাওনা')}</td>
-                    <td style="padding: 8px; text-align: right;">${t.amount}</td>
-                    <td style="padding: 8px;">${t.account}</td>
-                    <td style="padding: 8px;">${t.category || '-'}</td>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; text-align: center; color: #6b7280;">${sl++}</td>
+                    <td style="padding: 10px; font-weight: 500;">${t.date || ''}</td>
+                    <td style="padding: 10px; font-weight: 500;">${t.name || ''}</td>
+                    <td style="padding: 10px;">${typeBadge}</td>
+                    <td style="padding: 10px; text-align: right; font-weight: 600; ${t.type === 'income' ? 'color:#059669;' : 'color:#dc2626;'}">${amtFormatted}</td>
+                    <td style="padding: 10px;">${t.account || ''}</td>
+                    <td style="padding: 10px; color: #6b7280;">${t.category || '-'}</td>
                 </tr>
-             `;
+            `;
         });
 
-        // Calculate Balance
         const balance = totalIncome - totalExpense;
+        const balFormatted = `৳${Math.abs(balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const balColor = balance >= 0 ? '#059669' : '#dc2626';
 
-        // Create Print Window
-        const printWindow = window.open('', '', 'width=900,height=600');
-        printWindow.document.write(`
-            <html>
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="bn">
             <head>
-                <title>AmarHishab - Report</title>
-                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+                <meta charset="UTF-8">
+                <title>AmarHishab - লেনদেন রিপোর্ট</title>
+                <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
                 <style>
-                    body { font-family: 'Poppins', sans-serif, 'SolaimanLipi', Arial; padding: 20px; }
-                    h2 { text-align: center; color: #333; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; }
-                    .summary { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-around; }
-                    @media print { .no-print { display: none; } }
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body {
+                        font-family: 'Hind Siliguri', 'Poppins', sans-serif, Arial;
+                        color: #1f2937;
+                        background: #f8fafc;
+                        padding: 24px;
+                        font-size: 13.5px;
+                    }
+                    .container {
+                        max-width: 920px;
+                        margin: 0 auto;
+                        background: #ffffff;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+                        padding: 32px;
+                    }
+                    .action-bar {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                        padding-bottom: 16px;
+                        border-bottom: 1px solid #e5e7eb;
+                    }
+                    .btn {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 10px 18px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        border: none;
+                    }
+                    .btn-primary { background: #4f46e5; color: #ffffff; }
+                    .btn-secondary { background: #e5e7eb; color: #374151; }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        border-bottom: 2px solid #4f46e5;
+                        padding-bottom: 18px;
+                        margin-bottom: 22px;
+                    }
+                    .brand h1 { color: #4f46e5; font-size: 24px; font-weight: 700; }
+                    .brand p { color: #6b7280; font-size: 12px; margin-top: 2px; }
+                    .doc-title { text-align: right; }
+                    .doc-title h2 { font-size: 18px; color: #111827; }
+                    .doc-title p { color: #6b7280; font-size: 12px; margin-top: 2px; }
+                    .summary-grid {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 14px;
+                        margin-bottom: 24px;
+                    }
+                    .summary-card {
+                        padding: 14px;
+                        border-radius: 10px;
+                        text-align: center;
+                        border: 1px solid #e5e7eb;
+                    }
+                    .summary-card.income { background: #ecfdf5; border-color: #a7f3d0; }
+                    .summary-card.expense { background: #fef2f2; border-color: #fecaca; }
+                    .summary-card.balance { background: #faf5ff; border-color: #e9d5ff; }
+                    .summary-card .lbl { font-size: 12px; color: #4b5563; margin-bottom: 4px; }
+                    .summary-card .val { font-size: 18px; font-weight: 700; }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 24px;
+                    }
+                    th {
+                        background: #4f46e5;
+                        color: #ffffff;
+                        padding: 11px 12px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        text-align: left;
+                    }
+                    th:nth-child(5) { text-align: right; }
+                    tr:nth-child(even) td { background: #f9fafb; }
+                    .footer {
+                        border-top: 1px solid #e5e7eb;
+                        padding-top: 18px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #9ca3af;
+                        line-height: 1.6;
+                    }
+                    @media print {
+                        body { background: #ffffff; padding: 0; }
+                        .container { box-shadow: none; border-radius: 0; padding: 0; max-width: 100%; }
+                        .action-bar { display: none !important; }
+                        @page { size: A4 portrait; margin: 12mm; }
+                    }
                 </style>
             </head>
             <body>
+                <div class="container">
+                    <div class="action-bar">
+                        <button class="btn btn-primary" onclick="window.print()">🖨️ প্রিন্ট / সেভ PDF (Print or Save PDF)</button>
+                        <button class="btn btn-secondary" onclick="window.close()">✕ বন্ধ করুন</button>
+                    </div>
 
-                <h2>AmarHishab - লেনদেন রিপোর্ট</h2>
-                <p style="text-align:center; color:#666; font-size:0.9rem;">জেনারেট করা হয়েছে: ${new Date().toLocaleString()}</p>
-                
-                <div class="summary">
-                    <div><strong>মোট আয়:</strong> ৳${totalIncome}</div>
-                    <div><strong>মোট খরচ:</strong> ৳${totalExpense}</div>
-                    <div><strong>ব্যালেন্স:</strong> ৳${balance}</div>
+                    <div class="header">
+                        <div class="brand">
+                            <h1>AmarHishab (আমারহিসাব)</h1>
+                            <p>ব্যক্তিগত ও ব্যবসায়িক আয়-ব্যয় এবং দেনা-পাওনার হিসাব</p>
+                        </div>
+                        <div class="doc-title">
+                            <h2>লেনদেন রিপোর্ট</h2>
+                            <p>তারিখ: ${new Date().toLocaleDateString('bn-BD')} (${new Date().toLocaleDateString('en-GB')})</p>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="summary-card income">
+                            <div class="lbl">মোট আয়</div>
+                            <div class="val" style="color: #059669;">৳${totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                        </div>
+                        <div class="summary-card expense">
+                            <div class="lbl">মোট খরচ</div>
+                            <div class="val" style="color: #dc2626;">৳${totalExpense.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                        </div>
+                        <div class="summary-card balance">
+                            <div class="lbl">ব্যালেন্স (আয় - খরচ)</div>
+                            <div class="val" style="color: ${balColor};">${balance < 0 ? '-' : ''}${balFormatted}</div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align: center;">ক্রম</th>
+                                <th style="width: 105px;">তারিখ</th>
+                                <th>নাম / বিবরণ</th>
+                                <th style="width: 100px;">ধরন</th>
+                                <th style="text-align: right; width: 130px;">পরিমাণ (৳)</th>
+                                <th style="width: 110px;">একাউন্ট</th>
+                                <th style="width: 120px;">ক্যাটাগরি</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+
+                    <div class="footer">
+                        <p>AmarHishab - সহজ হিসাবের বিশ্বস্ত ডিজিটাল খাতা</p>
+                        <p>Developed with ❤️ by MD.Tanvir Ahamed Siddike - fb.com/tanviras615 | amarhishab.web.app</p>
+                    </div>
                 </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>তারিখ</th>
-                            <th>নাম / বিবরণ</th>
-                            <th>ধরন</th>
-                            <th style="text-align: right;">পরিমাণ (৳)</th>
-                            <th>একাউন্ট</th>
-                            <th>ক্যাটাগরি</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
-                </table>
-                
-                <div class="footer" style="text-align:center; margin-top:50px; padding-top:20px; border-top:1px solid #eee; font-size:12px; color:#999;">
-                    Developed by MD.Tanvir Ahamed Siddike - fb.com/tanviras615
-                </div>
-
                 <script>
-                    window.onload = function() { window.print(); }
+                    window.onload = function() {
+                        setTimeout(function() { window.print(); }, 400);
+                    };
                 </script>
             </body>
             </html>
-        `);
-        printWindow.document.close();
-    });
+        `;
+
+        const printWindow = window.open('', '_blank', 'width=900,height=750');
+        if (printWindow) {
+            printWindow.document.open();
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+        } else {
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(htmlContent);
+            iframe.contentWindow.document.close();
+            iframe.contentWindow.focus();
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                setTimeout(() => document.body.removeChild(iframe), 3000);
+            }, 600);
+        }
+        showToast("PDF ও প্রিন্ট উইন্ডো প্রস্তুত!", "success");
+    };
+
+    const printReportBtnEl = document.getElementById('print-report-btn');
+    if (printReportBtnEl) {
+        printReportBtnEl.addEventListener('click', generateTransactionReport);
+    }
 
     // --- SAVINGS GOALS ---
     const loadSavingsGoals = async () => {
@@ -2261,7 +2324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="item-amount ${amt > 0 ? 'amount-income' : 'amount-expense'}">${amt > 0 ? 'পাবেন' : 'দিতে হবে'} ৳${Math.abs(amt).toLocaleString('en-IN')}</span>
+                    <span class="item-amount ${amt > 0 ? 'amount-income' : 'amount-expense'}">${amt > 0 ? 'পাবেন' : 'দিতে হবে'} ৳${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <button class="btn-edit-debt" data-id="${doc.id}" style="background:none; border:none; color:var(--primary-color); cursor:pointer;"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteDebt('${doc.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer;"><i class="fas fa-trash"></i></button>
                 </div>
@@ -2286,12 +2349,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Debt View Summary (Unique IDs)
         const dvOwed = document.getElementById('debt-view-total-owed');
         const dvIOwe = document.getElementById('debt-view-total-i-owe');
-        if (dvOwed) dvOwed.innerText = owed;
-        if (dvIOwe) dvIOwe.innerText = iOwe;
+        if (dvOwed) dvOwed.innerText = `৳${owed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (dvIOwe) dvIOwe.innerText = `৳${iOwe.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         // Also update Global Dashboard elements if they exist (sync)
-        if (totalOwedEl) totalOwedEl.innerText = owed;
-        if (totalIOweEl) totalIOweEl.innerText = iOwe;
+        if (totalOwedEl) totalOwedEl.innerText = owed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (totalIOweEl) totalIOweEl.innerText = iOwe.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
     // New helper for editing debt (simple rename for now as structure is complex)
@@ -2403,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const badgeEl = document.getElementById('debt-status-badge');
         if (!balanceEl || !badgeEl) return;
 
-        balanceEl.innerText = `৳${Math.abs(balance)}`;
+        balanceEl.innerText = `৳${Math.abs(balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         if (balance > 0) {
             balanceEl.style.color = 'var(--success-color)';
             badgeEl.innerText = 'পাওনা (You Get)';
@@ -2461,7 +2524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="font-weight: 500; font-size: 0.9rem;">${typeText}</span>
                         <div style="font-size: 0.75rem; color: gray;">${d.date}</div>
                     </div>
-                    <div style="font-weight: bold; color: ${color};">৳${d.amount}</div>
+                    <div style="font-weight: bold; color: ${color};">৳${(parseFloat(d.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 `;
                 list.appendChild(li);
             });
@@ -3249,24 +3312,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Customer Statement (খতিয়ান) PDF Generator
+    // Customer Statement (খতিয়ান) PDF & Print Generator (Clean Bengali Support)
     const generateCustomerStatementPdf = async (ledgerId) => {
         try {
-            showToast("খতিয়ান PDF তৈরি হচ্ছে...", "info");
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            showToast("খতিয়ান রিপোর্ট তৈরি হচ্ছে...", "info");
             const userRef = db.collection('users').doc(currentUser.uid);
             const ledgerDoc = await userRef.collection('ledgers').doc(ledgerId).get();
             if (!ledgerDoc.exists) return showToast("হিসাব পাওয়া যায়নি", "error");
 
             const lData = ledgerDoc.data();
-            const personName = lData.personName || 'Customer';
-            const netBal = lData.netBalance || 0;
+            const personName = lData.personName || 'গ্রাহক';
+            const netBal = parseFloat(lData.netBalance) || 0;
+            const phone = lData.phone || 'N/A';
+            const email = lData.email || '';
 
-            const histSnap = await userRef.collection('ledgers').doc(ledgerId).collection('history').orderBy('date', 'desc').get();
-            const rows = [];
+            const histSnap = await userRef.collection('ledgers').doc(ledgerId).collection('history').orderBy('date', 'asc').get();
             let totalGiven = 0;
             let totalGot = 0;
+            let rowsHtml = '';
+            let sl = 1;
 
             histSnap.forEach(h => {
                 const hd = h.data();
@@ -3275,57 +3339,247 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isGiven) totalGiven += amt;
                 else totalGot += amt;
 
-                rows.push([
-                    hd.date || '',
-                    isGiven ? 'টাকা দিলাম (Lent)' : 'টাকা পেলাম (Received)',
-                    isGiven ? `Tk ${amt.toLocaleString('en-IN')}` : '-',
-                    !isGiven ? `Tk ${amt.toLocaleString('en-IN')}` : '-'
-                ]);
+                const amtFormatted = `৳${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                const typeBadge = isGiven ? 
+                    '<span style="color:#059669; font-weight:600; background:rgba(5,150,105,0.1); padding:3px 8px; border-radius:4px;">টাকা দিলাম (Lent)</span>' : 
+                    '<span style="color:#2563eb; font-weight:600; background:rgba(37,99,235,0.1); padding:3px 8px; border-radius:4px;">টাকা পেলাম (Received)</span>';
+
+                rowsHtml += `
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 10px; text-align: center; color: #6b7280;">${sl++}</td>
+                        <td style="padding: 10px; font-weight: 500;">${hd.date || ''}</td>
+                        <td style="padding: 10px;">${typeBadge}${hd.note ? `<div style="font-size: 11px; color: #6b7280; margin-top: 3px;">বিবরণ: ${hd.note}</div>` : ''}</td>
+                        <td style="padding: 10px; text-align: right; color: #059669; font-weight: 600;">${isGiven ? amtFormatted : '-'}</td>
+                        <td style="padding: 10px; text-align: right; color: #2563eb; font-weight: 600;">${!isGiven ? amtFormatted : '-'}</td>
+                    </tr>
+                `;
             });
 
-            // Header
-            doc.setFontSize(18);
-            doc.text("AmarHishab - কাস্টমার হিসাব খতিয়ান", 105, 15, null, null, "center");
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`গ্রাহক/ব্যক্তির নাম: ${personName} | মোবাইল: ${lData.phone || 'N/A'}`, 105, 22, null, null, "center");
-            doc.text(`রিপোর্ট তৈরির তারিখ: ${new Date().toLocaleDateString('bn-BD')}`, 105, 27, null, null, "center");
-
-            // Summary Box
-            doc.setDrawColor(200);
-            doc.setFillColor(245, 245, 245);
-            doc.rect(14, 32, 182, 16, 'F');
-            doc.setTextColor(0);
-            doc.setFontSize(10);
-            doc.text(`মোট দিলাম: Tk ${totalGiven.toLocaleString('en-IN')}`, 20, 42);
-            doc.text(`মোট পেলাম: Tk ${totalGot.toLocaleString('en-IN')}`, 80, 42);
-            const statusText = netBal > 0 ? `পাওনা: Tk ${Math.abs(netBal).toLocaleString('en-IN')}` : (netBal < 0 ? `দেনা: Tk ${Math.abs(netBal).toLocaleString('en-IN')}` : 'পরিশোধিত');
-            doc.text(`বর্তমান হিসাব: ${statusText}`, 140, 42);
-
-            // Table
-            doc.autoTable({
-                head: [['তারিখ', 'লেনদেনের বিবরণ', 'টাকা দিলাম (+)', 'টাকা পেলাম (-)']],
-                body: rows,
-                startY: 52,
-                styles: { font: "helvetica", overflow: 'linebreak', fontSize: 9 },
-                headStyles: { fillColor: [79, 70, 229] }
-            });
-
-            // Footer
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text("Developed by MD.Tanvir Ahamed Siddike - fb.com/tanviras615", 105, 290, null, null, "center");
+            if (histSnap.empty) {
+                rowsHtml = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#9ca3af;">কোনো লেনদেনের রেকর্ড পাওয়া যায়নি</td></tr>';
             }
 
-            const cleanName = personName.replace(/[<>:"/\\|?*]+/g, '_');
-            doc.save(`${cleanName}_Khotiyan_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
-            showToast("খতিয়ান PDF ডাউনলোড সম্পন্ন হয়েছে!", "success");
+            const statusText = netBal > 0 ? 
+                `<span style="color: #059669;">পাওনা: ৳${Math.abs(netBal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` : 
+                (netBal < 0 ? `<span style="color: #dc2626;">দেনা: ৳${Math.abs(netBal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` : 
+                `<span style="color: #4b5563;">পরিশোধিত (Settled)</span>`);
+
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="bn">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>খতিয়ান বিবরণী - ${personName}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+                    <style>
+                        * { box-sizing: border-box; margin: 0; padding: 0; }
+                        body {
+                            font-family: 'Hind Siliguri', 'Poppins', sans-serif, Arial;
+                            color: #1f2937;
+                            background: #f8fafc;
+                            padding: 24px;
+                            font-size: 13.5px;
+                        }
+                        .container {
+                            max-width: 820px;
+                            margin: 0 auto;
+                            background: #ffffff;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+                            padding: 32px;
+                        }
+                        .action-bar {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 20px;
+                            padding-bottom: 16px;
+                            border-bottom: 1px solid #e5e7eb;
+                        }
+                        .btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 10px 18px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            border: none;
+                        }
+                        .btn-primary { background: #4f46e5; color: #ffffff; }
+                        .btn-secondary { background: #e5e7eb; color: #374151; }
+                        .header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            border-bottom: 2px solid #4f46e5;
+                            padding-bottom: 18px;
+                            margin-bottom: 22px;
+                        }
+                        .brand h1 { color: #4f46e5; font-size: 24px; font-weight: 700; }
+                        .brand p { color: #6b7280; font-size: 12px; margin-top: 2px; }
+                        .doc-title { text-align: right; }
+                        .doc-title h2 { font-size: 18px; color: #111827; }
+                        .doc-title p { color: #6b7280; font-size: 12px; margin-top: 2px; }
+                        .customer-box {
+                            background: #f8fafc;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 10px;
+                            padding: 14px 20px;
+                            margin-bottom: 20px;
+                            display: flex;
+                            justify-content: space-between;
+                            flex-wrap: wrap;
+                            gap: 12px;
+                        }
+                        .customer-box div { font-size: 13px; }
+                        .customer-box strong { color: #0f172a; }
+                        .summary-grid {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 14px;
+                            margin-bottom: 24px;
+                        }
+                        .summary-card {
+                            padding: 14px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid #e5e7eb;
+                        }
+                        .summary-card.given { background: #ecfdf5; border-color: #a7f3d0; }
+                        .summary-card.got { background: #eff6ff; border-color: #bfdbfe; }
+                        .summary-card.balance { background: #faf5ff; border-color: #e9d5ff; }
+                        .summary-card .lbl { font-size: 12px; color: #4b5563; margin-bottom: 4px; }
+                        .summary-card .val { font-size: 18px; font-weight: 700; }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 24px;
+                        }
+                        th {
+                            background: #4f46e5;
+                            color: #ffffff;
+                            padding: 11px 12px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            text-align: left;
+                        }
+                        th:nth-child(4), th:nth-child(5) { text-align: right; }
+                        tr:nth-child(even) td { background: #f9fafb; }
+                        .footer {
+                            border-top: 1px solid #e5e7eb;
+                            padding-top: 18px;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #9ca3af;
+                            line-height: 1.6;
+                        }
+                        @media print {
+                            body { background: #ffffff; padding: 0; }
+                            .container { box-shadow: none; border-radius: 0; padding: 0; max-width: 100%; }
+                            .action-bar { display: none !important; }
+                            @page { size: A4 portrait; margin: 12mm; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="action-bar">
+                            <button class="btn btn-primary" onclick="window.print()">🖨️ প্রিন্ট / সেভ PDF (Print or Save PDF)</button>
+                            <button class="btn btn-secondary" onclick="window.close()">✕ বন্ধ করুন</button>
+                        </div>
+
+                        <div class="header">
+                            <div class="brand">
+                                <h1>AmarHishab (আমারহিসাব)</h1>
+                                <p>ব্যক্তিগত ও ব্যবসায়িক আয়-ব্যয় এবং দেনা-পাওনার হিসাব</p>
+                            </div>
+                            <div class="doc-title">
+                                <h2>কাস্টমার হিসাব খতিয়ান</h2>
+                                <p>তারিখ: ${new Date().toLocaleDateString('bn-BD')} (${new Date().toLocaleDateString('en-GB')})</p>
+                            </div>
+                        </div>
+
+                        <div class="customer-box">
+                            <div><strong>গ্রাহকের নাম:</strong> ${personName}</div>
+                            <div><strong>মোবাইল:</strong> ${phone}</div>
+                            ${email ? `<div><strong>ইমেইল:</strong> ${email}</div>` : ''}
+                            <div><strong>রিপোর্ট সময়:</strong> ${new Date().toLocaleTimeString()}</div>
+                        </div>
+
+                        <div class="summary-grid">
+                            <div class="summary-card given">
+                                <div class="lbl">মোট দিলাম (Lent)</div>
+                                <div class="val" style="color: #059669;">৳${totalGiven.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                            </div>
+                            <div class="summary-card got">
+                                <div class="lbl">মোট পেলাম (Received)</div>
+                                <div class="val" style="color: #2563eb;">৳${totalGot.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                            </div>
+                            <div class="summary-card balance">
+                                <div class="lbl">বর্তমান স্থিতি (Balance)</div>
+                                <div class="val">${statusText}</div>
+                            </div>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">ক্রম</th>
+                                    <th style="width: 110px;">তারিখ</th>
+                                    <th>লেনদেনের বিবরণ</th>
+                                    <th style="text-align: right; width: 140px;">টাকা দিলাম (+)</th>
+                                    <th style="text-align: right; width: 140px;">টাকা পেলাম (-)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+
+                        <div class="footer">
+                            <p>এটি একটি কম্পিউটার জেনারেটেড ডিজিটাল খতিয়ান বিবরণী।</p>
+                            <p>Developed with ❤️ by MD.Tanvir Ahamed Siddike - fb.com/tanviras615 | amarhishab.web.app</p>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); }, 400);
+                        };
+                    </script>
+                </body>
+                </html>
+            `;
+
+            const printWin = window.open('', '_blank', 'width=900,height=750');
+            if (printWin) {
+                printWin.document.open();
+                printWin.document.write(htmlContent);
+                printWin.document.close();
+            } else {
+                const iframe = document.createElement('iframe');
+                iframe.style.position = 'fixed';
+                iframe.style.right = '0';
+                iframe.style.bottom = '0';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                document.body.appendChild(iframe);
+                iframe.contentWindow.document.open();
+                iframe.contentWindow.document.write(htmlContent);
+                iframe.contentWindow.document.close();
+                iframe.contentWindow.focus();
+                setTimeout(() => {
+                    iframe.contentWindow.print();
+                    setTimeout(() => document.body.removeChild(iframe), 3000);
+                }, 600);
+            }
+
+            showToast("খতিয়ান প্রিন্ট ও PDF উইন্ডো প্রস্তুত!", "success");
         } catch (e) {
             console.error("PDF statement error:", e);
-            showToast("PDF তৈরি করতে সমস্যা হয়েছে: " + e.message, "error");
+            showToast("খতিয়ান রিপোর্ট তৈরি করতে সমস্যা হয়েছে: " + e.message, "error");
         }
     };
 
@@ -3376,7 +3630,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const formattedBal = bal.toLocaleString('en-IN');
+            const formattedBal = bal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const paymentText = window.userPaymentNumber ? `\nবিকাশ/নগদ মারফত পরিশোধ করতে: ${window.userPaymentNumber}` : '';
             const msg = `আসসালামু আলাইকুম ${personName}, আমারহিসাব অ্যাপের রেকর্ড অনুযায়ী আপনার কাছে ৳${formattedBal} পাওনা রয়েছে।${paymentText}\nঅনুগ্রহ করে সুবিধাজনক সময়ে পরিশোধ করবেন। ধন্যবাদ!`;
 

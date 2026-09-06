@@ -7,8 +7,8 @@
         content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>AmarHishab</title>
 
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,45 +105,45 @@
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    <div class="balance-amount">৳<span id="current-balance">0</span></div>
+                    <div class="balance-amount"><span id="current-balance">৳0.00</span></div>
 
                     <div class="stats-container">
                         <!-- Group 1: Month -->
                         <div class="stat-group">
                             <h5>চলতি মাস</h5>
-                            <div class="stat-row">
-                                <span style="opacity:0.8;">আয়</span>
-                                <span class="text-success">+৳<span id="current-month-income">0</span></span>
+                            <div class="stat-item">
+                                <span class="stat-label">আয়</span>
+                                <span class="stat-value text-success">+৳<span id="current-month-income">0.00</span></span>
                             </div>
-                            <div class="stat-row">
-                                <span style="opacity:0.8;">খরচ</span>
-                                <span class="text-danger">-৳<span id="current-month-expense">0</span></span>
+                            <div class="stat-item">
+                                <span class="stat-label">খরচ</span>
+                                <span class="stat-value text-danger">-৳<span id="current-month-expense">0.00</span></span>
                             </div>
                         </div>
 
                         <!-- Group 2: Lifetime -->
                         <div class="stat-group">
                             <h5>সর্বমোট</h5>
-                            <div class="stat-row">
-                                <span style="opacity:0.8;">আয়</span>
-                                <span class="text-success">+৳<span id="total-income">0</span></span>
+                            <div class="stat-item">
+                                <span class="stat-label">আয়</span>
+                                <span class="stat-value text-success">+৳<span id="total-income">0.00</span></span>
                             </div>
-                            <div class="stat-row">
-                                <span style="opacity:0.8;">খরচ</span>
-                                <span class="text-danger">-৳<span id="total-expense">0</span></span>
+                            <div class="stat-item">
+                                <span class="stat-label">খরচ</span>
+                                <span class="stat-value text-danger">-৳<span id="total-expense">0.00</span></span>
                             </div>
                         </div>
 
                         <!-- Group 3: Debt -->
                         <div class="stat-group">
                             <h5>দেনা-পাওনা</h5>
-                            <div class="stat-row">
-                                <span style="opacity:0.8;">পাবেন</span>
-                                <span class="text-success">+৳<span id="total-owed">0</span></span>
+                            <div class="stat-item">
+                                <span class="stat-label">পাবেন</span>
+                                <span class="stat-value text-success">+৳<span id="total-owed">0.00</span></span>
                             </div>
-                            <div class="stat-row">
-                                <span style="opacity:0.8;">দিতে হবে</span>
-                                <span class="text-danger">-৳<span id="total-i-owe">0</span></span>
+                            <div class="stat-item">
+                                <span class="stat-label">দিতে হবে</span>
+                                <span class="stat-value text-danger">-৳<span id="total-i-owe">0.00</span></span>
                             </div>
                         </div>
                     </div>
@@ -282,15 +282,15 @@
                 <!-- List -->
                 <ul id="main-transaction-list" class="transaction-list"></ul>
 
-                <!-- Pagination / Load More -->
                 <!-- Pagination System -->
-                <div class="pagination-controls"
-                    style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px;">
-                    <button id="prev-page-btn" class="secondary-btn" disabled><i class="fas fa-arrow-left"></i>
-                        পূর্ববর্তী</button>
-                    <span id="page-info" style="font-weight: 500; font-size: 0.9rem;">পৃষ্ঠা ১</span>
-                    <button id="next-page-btn" class="secondary-btn" disabled>পরবর্তী <i
-                            class="fas fa-arrow-right"></i></button>
+                <div class="pagination-controls">
+                    <button id="prev-page-btn" class="pagination-btn" disabled>
+                        <i class="fas fa-arrow-left"></i> পূর্ববর্তী
+                    </button>
+                    <span id="page-info" class="pagination-page-badge">পৃষ্ঠা ১</span>
+                    <button id="next-page-btn" class="pagination-btn" disabled>
+                        পরবর্তী <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
                 <p id="no-more-data" class="hidden text-center mt-2"
                     style="font-size: 0.8rem; color: var(--secondary-color);">
@@ -650,15 +650,16 @@
 
     <!-- Export Modal -->
     <div id="export-modal" class="modal">
-        <div class="modal-content" style="text-align: center;">
+        <div class="modal-content">
             <span class="close-btn" aria-label="Close">&times;</span>
-            <h2>ডাটা এক্সপোর্ট & রিপোর্ট</h2>
-            <p style="margin-bottom: 20px; color:var(--secondary-color); font-size: 0.9rem;">আপনার লেনদেনের রিপোর্ট তৈরি
-                করুন</p>
+            <div class="export-modal-header">
+                <h2><i class="fas fa-file-export" style="color: var(--primary-color);"></i> ডাটা এক্সপোর্ট & রিপোর্ট</h2>
+                <p>আপনার লেনদেনের রিপোর্ট প্রিন্ট বা ডাউনলোড করুন</p>
+            </div>
 
             <!-- Date Filter -->
-            <div style="text-align: left; margin-bottom: 20px;">
-                <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block;">সময়সীমা:</label>
+            <div style="margin-bottom: 18px;">
+                <label class="export-section-label">সময়সীমা নির্ধারণ করুন:</label>
                 <div class="export-options">
                     <label class="export-pill">
                         <input type="radio" name="export-period" value="this-month" checked>
@@ -670,62 +671,64 @@
                     </label>
                     <label class="export-pill">
                         <input type="radio" name="export-period" value="all">
-                        <span>সব</span>
+                        <span>সব সময়</span>
                     </label>
                     <label class="export-pill">
                         <input type="radio" name="export-period" value="custom">
-                        <span>কাস্টম</span>
+                        <span>কাস্টম তারিখ</span>
                     </label>
                 </div>
                 <div id="export-custom-date" class="hidden"
-                    style="display: flex; gap: 10px; margin-top: 15px; align-items: center;">
+                    style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
                     <input type="date" id="export-start-date"
-                        style="padding: 8px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); flex:1;">
-                    <span style="font-size: 0.9rem; color: var(--secondary-color);">থেকে</span>
+                        style="padding: 8px 12px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); flex:1;">
+                    <span style="font-size: 0.85rem; color: var(--secondary-color);">থেকে</span>
                     <input type="date" id="export-end-date"
-                        style="padding: 8px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); flex:1;">
+                        style="padding: 8px 12px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); flex:1;">
                 </div>
             </div>
 
             <!-- Type Filter -->
-            <div style="text-align: left; margin-bottom: 25px;">
-                <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block;">ধরন:</label>
+            <div style="margin-bottom: 22px;">
+                <label class="export-section-label">লেনদেনের ধরন:</label>
                 <div class="export-options">
                     <label class="export-pill">
                         <input type="checkbox" id="exp-type-income" checked>
-                        <span>আয়</span>
+                        <span>আয় (Income)</span>
                     </label>
                     <label class="export-pill">
                         <input type="checkbox" id="exp-type-expense" checked>
-                        <span>খরচ</span>
+                        <span>খরচ (Expense)</span>
                     </label>
-                    <label class="export-pill">
+                    <label class="export-pill" style="grid-column: span 2;">
                         <input type="checkbox" id="exp-type-debt" checked>
-                        <span>দেনা-পাওনা</span>
+                        <span>দেনা-পাওনা (Debt/Lend)</span>
                     </label>
                 </div>
             </div>
 
             <!-- Action Buttons -->
-            <button id="print-report-btn" class="primary-btn full-width"
-                style="margin-bottom: 15px; background: #6610f2; padding: 12px; font-size: 1rem;"><i
-                    class="fas fa-print"></i> প্রিন্ট / সেভ PDF (বাংলা)</button>
-
-            <div style="display: flex; gap: 15px;">
-                <button id="export-excel-btn" class="primary-btn"
-                    style="flex:1; background: #28a745; font-size: 0.9rem;"><i class="fas fa-file-excel"></i>
-                    Excel</button>
-                <button id="export-pdf-btn" class="primary-btn"
-                    style="flex:1; background: #dc3545; font-size: 0.9rem;"><i class="fas fa-file-pdf"></i> PDF</button>
+            <div class="export-action-btns">
+                <button id="print-report-btn" class="primary-btn full-width"
+                    style="background: var(--primary-color); padding: 13px; font-size: 0.95rem; border-radius: 10px;">
+                    <i class="fas fa-print"></i> প্রিন্ট / সেভ PDF (বাংলা)
+                </button>
+                <div class="export-split-btns">
+                    <button id="export-excel-btn" class="primary-btn"
+                        style="flex:1; background: #10b981; font-size: 0.88rem; padding: 11px; border-radius: 10px;">
+                        <i class="fas fa-file-excel"></i> Excel ফাইল
+                    </button>
+                    <button id="export-pdf-btn" class="primary-btn"
+                        style="flex:1; background: #ef4444; font-size: 0.88rem; padding: 11px; border-radius: 10px;">
+                        <i class="fas fa-file-pdf"></i> PDF রিপোর্ট
+                    </button>
+                </div>
             </div>
 
-            <div
-                style="margin-top: 20px; font-size: 0.7rem; color: #888; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                <p>Developed by <a href="https://www.facebook.com/tanviras615" target="_blank"
-                        style="color: var(--primary-color); text-decoration: none; font-weight: 600;">MD.Tanvir Ahamed
-                        Siddike</a></p>
+            <div style="margin-top: 20px; font-size: 0.72rem; color: #888; border-top: 1px solid var(--border-color); padding-top: 12px; text-align: center;">
+                <p>Developed with ❤️ by <a href="https://www.facebook.com/tanviras615" target="_blank"
+                        style="color: var(--primary-color); text-decoration: none; font-weight: 600;">MD.Tanvir Ahamed Siddike</a></p>
             </div>
-            <p style="text-align:center; font-size:0.8rem; color:var(--secondary-color); margin-top:10px;">রিপোর্টের
         </div>
     </div>
 
@@ -805,29 +808,6 @@
         </div>
     </div> <!-- Close settings-modal -->
 
-    <!-- Update Modal -->
-    <div id="update-modal" class="modal">
-        <div class="modal-content" style="text-align: center;">
-            <div style="display:flex; justify-content:flex-end;">
-                <span class="close-btn" aria-label="Close">&times;</span>
-            </div>
-
-            <div class="update-rocket-wrapper">
-                <div class="update-rocket">
-                    <i class="fas fa-rocket"></i>
-                </div>
-            </div>
-
-            <h2 style="margin-top:15px; color: var(--primary-color);">নতুন আপডেট এসেছে!</h2>
-            <p id="update-release-notes"
-                style="margin: 15px 0; color: var(--secondary-color); font-size: 0.95rem; line-height: 1.5;">
-                some cool features...
-            </p>
-
-            <a id="update-link-btn" href="#" target="_blank" class="primary-btn full-width"
-                style="display:inline-block; text-decoration:none;">ডাউনলোড করুন</a>
-        </div>
-    </div>
 
     <!-- Debt Details Modal (New & Improved) -->
     <div id="debt-details-modal" class="modal">
