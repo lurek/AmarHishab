@@ -22,25 +22,6 @@
 
 ---
 
-## 📱 Visual Showcase / এক নজরে অ্যাপ ইন্টারফেস
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%">
-        <b>📱 Mobile View (অ্যান্ড্রয়েড অ্যাপ ও মোবাইল স্ক্রিন)</b><br><br>
-        <img src="public/screenshots/mobile-view.png" alt="AmarHishab Mobile Interface" width="340" style="border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.08);" />
-      </td>
-      <td align="center" width="50%">
-        <b>💻 Desktop View (ওয়েব ড্যাশবোর্ড)</b><br><br>
-        <img src="public/screenshots/desktop-view.png" alt="AmarHishab Desktop Interface" width="520" style="border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.08);" />
-      </td>
-    </tr>
-  </table>
-</div>
-
----
-
 ## 💡 About AmarHishab / আমারহিসাব পরিচিতি
 
 **AmarHishab (আমারহিসাব)** is an intuitive, fast, and feature-rich fintech web and mobile application developed to simplify personal bookkeeping, business transaction tracking, and debt management for Bengali and international users. 

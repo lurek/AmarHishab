@@ -190,6 +190,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const loadCachedDashboardStats = () => {
+        try {
+            const raw = localStorage.getItem('cached_dashboard_stats');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            const safeSetText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (typeof text === 'number') {
+                        el.innerText = text.toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    } else {
+                        el.innerText = text;
+                    }
+                }
+            };
+            if (data.monthIncome !== undefined) safeSetText('current-month-income', data.monthIncome);
+            if (data.monthExpense !== undefined) safeSetText('current-month-expense', data.monthExpense);
+            if (data.totalIncome !== undefined) safeSetText('total-income', data.totalIncome);
+            if (data.totalExpense !== undefined) safeSetText('total-expense', data.totalExpense);
+            if (data.totalLend !== undefined) safeSetText('total-owed', data.totalLend);
+            if (data.totalBorrow !== undefined) safeSetText('total-i-owe', data.totalBorrow);
+            if (data.currentBalanceValue !== undefined) {
+                currentBalanceValue = data.currentBalanceValue;
+                updateBalanceDisplay();
+            }
+        } catch (e) {
+            console.warn("Cached stats error:", e);
+        }
+    };
+
     const updateBalanceEyeIcon = () => {
         if (toggleBalanceBtn) {
             toggleBalanceBtn.innerHTML = isBalanceHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
@@ -198,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
     const init = () => {
+        loadCachedDashboardStats();
         setupAuthListeners();
         setupNavigation();
         setupModals();
@@ -444,6 +478,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (qExp) qExp.addEventListener('click', () => openQuickAdd('expense'));
         const qInc = document.getElementById('quick-add-income');
         if (qInc) qInc.addEventListener('click', () => openQuickAdd('income'));
+        const qSms = document.getElementById('quick-sms-parser');
+        if (qSms) {
+            qSms.addEventListener('click', () => {
+                if (smsParserModal) smsParserModal.classList.add('open');
+            });
+        }
         const qTra = document.getElementById('quick-add-transfer');
         if (qTra) qTra.addEventListener('click', () => openQuickAdd('transfer'));
         const qDeb = document.getElementById('quick-go-debt');
@@ -1040,15 +1080,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p style="font-size: 0.75rem; color: var(--secondary-color); margin: 0;">সারসংক্ষেপ (Summary)</p>
                 </div>
             </div>
-            <div style="display: flex; gap: 15px; text-align: right;">
-                ${totals.totalExpense > 0 ? `<div>
-                    <div style="font-size: 0.7rem; color: var(--secondary-color);">মোট খরচ</div>
-                    <div class="amount-expense" style="font-size: 0.95rem; font-weight: 600;">-৳${(parseFloat(totals.totalExpense) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                </div>` : ''}
-                ${totals.totalIncome > 0 ? `<div>
-                    <div style="font-size: 0.7rem; color: var(--secondary-color);">মোট আয়</div>
-                    <div class="amount-income text-success" style="font-size: 0.95rem; font-weight: 600;">+৳${(parseFloat(totals.totalIncome) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                </div>` : ''}
+            <div class="summary-amounts-container">
+                ${totals.totalExpense > 0 ? `
+                    <div class="summary-amount-badge expense">
+                        <span class="summary-badge-title">মোট খরচ</span>
+                        <span class="summary-badge-value">-৳${(parseFloat(totals.totalExpense) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>` : ''}
+                ${totals.totalIncome > 0 ? `
+                    <div class="summary-amount-badge income">
+                        <span class="summary-badge-title">মোট আয়</span>
+                        <span class="summary-badge-value text-success">+৳${(parseFloat(totals.totalIncome) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>` : ''}
             </div>
         `;
 
@@ -1063,13 +1105,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let amountsHtml = '';
         if (data.totalExpense > 0) {
-            amountsHtml += `<div class="amount-expense" style="font-size:0.9rem; margin-bottom: 2px;">-৳${(parseFloat(data.totalExpense) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
+            amountsHtml += `<div class="item-amount amount-expense" style="font-size:0.88rem; margin-bottom: 3px;">-৳${(parseFloat(data.totalExpense) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
         }
         if (data.totalIncome > 0) {
-            amountsHtml += `<div class="amount-income text-success" style="font-size:0.9rem;">+৳${(parseFloat(data.totalIncome) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
+            amountsHtml += `<div class="item-amount amount-income text-success" style="font-size:0.88rem;">+৳${(parseFloat(data.totalIncome) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
         }
         if (amountsHtml === '') {
-            amountsHtml = `<div style="font-size:0.9rem; color:gray;">৳0.00</div>`;
+            amountsHtml = `<div class="item-amount" style="font-size:0.88rem; color:gray; background:var(--light-bg);">৳0.00</div>`;
         }
 
         li.innerHTML = `
@@ -1365,6 +1407,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentBalanceValue = safeMath.sub(totalIncome, totalExpense);
             updateBalanceDisplay();
+
+            // Cache stats locally so balances are always immediately available
+            try {
+                localStorage.setItem('cached_dashboard_stats', JSON.stringify({
+                    monthIncome,
+                    monthExpense,
+                    totalIncome,
+                    totalExpense,
+                    totalLend,
+                    totalBorrow,
+                    currentBalanceValue
+                }));
+            } catch (e) {
+                console.warn("Could not cache dashboard stats:", e);
+            }
 
             // Monthly Comparison & Budget
             await loadComparisonAndBudget(userRef, today, monthExpense);
@@ -2309,24 +2366,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     dueBadge = `<span style="font-size:0.72rem; color:var(--secondary-color);"><i class="fas fa-calendar-alt"></i> ${d.dueDate}</span>`;
                 }
             }
+            let cleanDate = d.lastUpdated || '';
+            if (cleanDate.includes('T')) {
+                cleanDate = cleanDate.split('T')[0];
+            }
             const phoneIcon = (d.phone || d.whatsapp) ? '<i class="fas fa-mobile-alt" style="margin-right:4px; color:var(--primary-color);" title="কন্টাক্ট যুক্ত আছে"></i>' : '';
 
             const li = document.createElement('li');
+            li.className = 'debt-contact-card';
             li.innerHTML = `
-                <div class="list-item-left">
-                    <div class="icon-box icon-debt"><i class="fas fa-handshake"></i></div>
-                    <div class="item-details">
-                        <h4>${d.personName}</h4>
-                        <p style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                            <span>${phoneIcon}${d.lastUpdated}</span>
-                            ${dueBadge}
-                        </p>
+                <!-- Row 1: Person Name and Quick Actions -->
+                <div class="debt-card-top-row">
+                    <div class="debt-card-person-info">
+                        <div class="icon-box icon-debt"><i class="fas fa-handshake"></i></div>
+                        <div class="debt-card-name-wrap">
+                            <h4 class="debt-card-name">${d.personName || 'নামহীন'}</h4>
+                            ${phoneIcon ? `<span class="debt-phone-indicator">${phoneIcon}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="debt-card-actions">
+                        <button class="btn-edit-debt icon-btn-round" data-id="${doc.id}" title="এডিট"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteDebt('${doc.id}')" class="btn-delete-debt icon-btn-round danger" title="মুছে ফেলুন"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="item-amount ${amt > 0 ? 'amount-income' : 'amount-expense'}">${amt > 0 ? 'পাবেন' : 'দিতে হবে'} ৳${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    <button class="btn-edit-debt" data-id="${doc.id}" style="background:none; border:none; color:var(--primary-color); cursor:pointer;"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteDebt('${doc.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer;"><i class="fas fa-trash"></i></button>
+
+                <!-- Row 2: Date / Due Badge on Left, Amount on Right -->
+                <div class="debt-card-bottom-row">
+                    <div class="debt-card-meta">
+                        <span class="debt-date-label"><i class="far fa-calendar-alt"></i> ${cleanDate}</span>
+                        ${dueBadge}
+                    </div>
+                    <div class="debt-card-amount-box">
+                        <span class="item-amount ${amt > 0 ? 'amount-income' : 'amount-expense'}">
+                            ${amt > 0 ? 'পাবেন' : 'দিতে হবে'} ৳${Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                    </div>
                 </div>
             `;
             // Click to view details (Using onclick for robustness)
@@ -2504,27 +2578,45 @@ document.addEventListener('DOMContentLoaded', () => {
             snap.forEach(doc => {
                 const d = doc.data();
                 const li = document.createElement('li');
-                li.style.cssText = "padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;";
+                li.className = 'debt-history-record';
 
                 // Color logic based on type
-                let color = 'black';
+                let typeClass = 'initial';
                 let typeText = d.type;
+                let sign = '';
 
-                // Types: 'LEND_GIVEN' (+), 'DEBT_REPAID' (+), 'BORROW_TAKEN' (-), 'LEND_RETURNED' (-)
                 if (d.type === 'GIVEN') {
-                    color = 'green'; typeText = 'দিলাম (+powna)';
+                    typeClass = 'given';
+                    typeText = 'টাকা দিলাম (+পাওনা)';
+                    sign = '+';
                 } else if (d.type === 'GOT') {
-                    color = 'red'; typeText = 'পেলাম (-powna)';
+                    typeClass = 'got';
+                    typeText = 'টাকা পেলাম (-পাওনা)';
+                    sign = '-';
                 } else if (d.type === 'INITIAL') {
-                    color = 'gray'; typeText = 'শুরু';
+                    typeClass = 'initial';
+                    typeText = 'হিসাব শুরু';
+                    sign = '';
+                }
+
+                let cleanDate = d.date || '';
+                if (cleanDate.includes('T')) {
+                    cleanDate = cleanDate.split('T')[0];
                 }
 
                 li.innerHTML = `
-                    <div>
-                        <span style="font-weight: 500; font-size: 0.9rem;">${typeText}</span>
-                        <div style="font-size: 0.75rem; color: gray;">${d.date}</div>
+                    <div class="debt-history-info">
+                        <div class="debt-history-badge ${typeClass}">
+                            <i class="fas ${d.type === 'GIVEN' ? 'fa-arrow-up' : (d.type === 'GOT' ? 'fa-arrow-down' : 'fa-balance-scale')}"></i>
+                        </div>
+                        <div>
+                            <span class="debt-history-type-title">${typeText}</span>
+                            <div class="debt-history-date"><i class="far fa-calendar-alt"></i> ${cleanDate}</div>
+                        </div>
                     </div>
-                    <div style="font-weight: bold; color: ${color};">৳${(parseFloat(d.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div class="debt-history-amount ${typeClass}">
+                        ${sign}৳${(parseFloat(d.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
                 `;
                 list.appendChild(li);
             });

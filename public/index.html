@@ -108,42 +108,49 @@
                     <div class="balance-amount"><span id="current-balance">৳0.00</span></div>
 
                     <div class="stats-container">
-                        <!-- Group 1: Month -->
-                        <div class="stat-group">
-                            <h5>চলতি মাস</h5>
-                            <div class="stat-item">
-                                <span class="stat-label">আয়</span>
-                                <span class="stat-value text-success">+৳<span id="current-month-income">0.00</span></span>
+                        <!-- Row 1: Primary Month Focus (Wide & Spacious) -->
+                        <div class="stat-group stat-group-month">
+                            <div class="stat-group-header">
+                                <h5>চলতি মাস</h5>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">খরচ</span>
-                                <span class="stat-value text-danger">-৳<span id="current-month-expense">0.00</span></span>
-                            </div>
-                        </div>
-
-                        <!-- Group 2: Lifetime -->
-                        <div class="stat-group">
-                            <h5>সর্বমোট</h5>
-                            <div class="stat-item">
-                                <span class="stat-label">আয়</span>
-                                <span class="stat-value text-success">+৳<span id="total-income">0.00</span></span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">খরচ</span>
-                                <span class="stat-value text-danger">-৳<span id="total-expense">0.00</span></span>
+                            <div class="stat-row-items">
+                                <div class="stat-item">
+                                    <span class="stat-label">আয়</span>
+                                    <span class="stat-value text-success">+৳<span id="current-month-income">0.00</span></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">খরচ</span>
+                                    <span class="stat-value text-danger">-৳<span id="current-month-expense">0.00</span></span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Group 3: Debt -->
-                        <div class="stat-group">
-                            <h5>দেনা-পাওনা</h5>
-                            <div class="stat-item">
-                                <span class="stat-label">পাবেন</span>
-                                <span class="stat-value text-success">+৳<span id="total-owed">0.00</span></span>
+                        <!-- Row 2: Lifetime & Debt Stats Side-by-Side with plenty of width -->
+                        <div class="stat-subgrid">
+                            <!-- Group 2: Lifetime -->
+                            <div class="stat-group">
+                                <h5>সর্বমোট</h5>
+                                <div class="stat-item">
+                                    <span class="stat-label">আয়</span>
+                                    <span class="stat-value text-success">+৳<span id="total-income">0.00</span></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">খরচ</span>
+                                    <span class="stat-value text-danger">-৳<span id="total-expense">0.00</span></span>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">দিতে হবে</span>
-                                <span class="stat-value text-danger">-৳<span id="total-i-owe">0.00</span></span>
+
+                            <!-- Group 3: Debt -->
+                            <div class="stat-group">
+                                <h5>দেনা-পাওনা</h5>
+                                <div class="stat-item">
+                                    <span class="stat-label">পাবেন</span>
+                                    <span class="stat-value text-success">+৳<span id="total-owed">0.00</span></span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">দিতে হবে</span>
+                                    <span class="stat-value text-danger">-৳<span id="total-i-owe">0.00</span></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -159,9 +166,9 @@
                         <div class="qa-icon income"><i class="fas fa-arrow-up"></i></div>
                         <span>আয়</span>
                     </button>
-                    <button class="quick-action-chip" id="quick-add-transfer" type="button">
-                        <div class="qa-icon transfer"><i class="fas fa-exchange-alt"></i></div>
-                        <span>স্থানান্তর</span>
+                    <button class="quick-action-chip" id="quick-sms-parser" type="button">
+                        <div class="qa-icon sms"><i class="fas fa-comment-dollar"></i></div>
+                        <span>SMS পার্সার</span>
                     </button>
                     <button class="quick-action-chip" id="quick-go-debt" type="button">
                         <div class="qa-icon debt"><i class="fas fa-handshake"></i></div>
@@ -811,62 +818,67 @@
 
     <!-- Debt Details Modal (New & Improved) -->
     <div id="debt-details-modal" class="modal">
-        <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-content debt-modal-balanced-content" style="max-height: 92vh; display: flex; flex-direction: column;">
             <span class="close-btn" aria-label="Close">&times;</span>
 
-            <!-- Header -->
-            <div style="text-align: center; margin-bottom: 15px;">
-                <h2 id="debt-person-name" style="margin-bottom: 4px;">Person Name</h2>
-                <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-                    <button id="edit-debt-name-btn"
-                        style="background: none; border: none; font-size: 0.8rem; color: var(--primary-color); cursor: pointer; text-decoration: underline;">নাম এডিট</button>
-                    <span style="color: var(--secondary-color); font-size: 0.75rem;">•</span>
-                    <button id="btn-open-contact-modal"
-                        style="background: none; border: none; font-size: 0.8rem; color: var(--primary-color); cursor: pointer; text-decoration: underline;"><i class="fas fa-address-card"></i> কন্টাক্ট এডিট</button>
+            <!-- Compact Header -->
+            <div class="debt-modal-header-compact">
+                <div class="debt-modal-title-row">
+                    <h3 id="debt-person-name" class="debt-person-title">Person Name</h3>
+                    <div class="debt-modal-action-links">
+                        <button id="edit-debt-name-btn" class="debt-link-btn" title="নাম এডিট"><i class="fas fa-edit"></i> নাম</button>
+                        <span class="divider-dot">•</span>
+                        <button id="btn-open-contact-modal" class="debt-link-btn" title="কন্টাক্ট এডিট"><i class="fas fa-address-card"></i> কন্টাক্ট</button>
+                    </div>
                 </div>
 
                 <!-- Contact Badges Row -->
-                <div id="debt-contact-badges" class="contact-badge-row">
+                <div id="debt-contact-badges" class="contact-badge-row debt-contact-badges-compact">
                     <!-- Populated by script.js -->
                 </div>
 
-                <div class="balance-display" style="margin-top: 10px;">
-                    <span id="debt-status-badge"
-                        style="background: #eee; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">STATUS</span>
-                    <h1 id="debt-net-balance" style="font-size: 2.5rem; margin: 5px 0; color: var(--text-color);">৳0
-                    </h1>
+                <!-- Compact Balance Banner -->
+                <div class="debt-balance-banner">
+                    <span id="debt-status-badge" class="debt-status-pill">STATUS</span>
+                    <span id="debt-net-balance" class="debt-balance-amount">৳0</span>
                 </div>
             </div>
 
-            <!-- Add Transaction Section -->
-            <div class="transaction-add-box" style="padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                <h4 style="margin-bottom: 10px; font-size: 0.9rem; opacity: 0.8;">নতুন লেনদেন যোগ করুন</h4>
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="number" id="debt-new-amount" placeholder="পরিমাণ" style="flex: 1;">
-                    <input type="date" id="debt-new-date" style="flex: 1;">
+            <!-- Compact Add Transaction Section -->
+            <div class="transaction-add-box debt-add-box-compact">
+                <div class="debt-input-row">
+                    <div class="debt-input-wrap amount-wrap">
+                        <span class="currency-prefix">৳</span>
+                        <input type="number" id="debt-new-amount" placeholder="পরিমাণ" class="compact-input">
+                    </div>
+                    <input type="date" id="debt-new-date" class="compact-input debt-date-input">
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button id="btn-give-money" class="primary-btn"
-                        style="flex: 1; background: var(--success-color);">টাকা দিলাম (+)</button>
-                    <button id="btn-get-money" class="primary-btn"
-                        style="flex: 1; background: var(--danger-color);">টাকা পেলাম (-)</button>
+                <div class="debt-action-btn-row">
+                    <button id="btn-give-money" class="primary-btn btn-give-compact" type="button">
+                        <i class="fas fa-plus"></i> টাকা দিলাম
+                    </button>
+                    <button id="btn-get-money" class="primary-btn btn-get-compact" type="button">
+                        <i class="fas fa-minus"></i> টাকা পেলাম
+                    </button>
                 </div>
-                <p style="font-size: 0.75rem; color: gray; margin-top: 5px; text-align: center;">
-                    * 'দিলাম' মানে আপনি পাবেন (পাওনা বাড়ে) | 'পেলাম' মানে দেনা বাড়ে/পরিশোধ হলো
-                </p>
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button id="btn-debt-reminder" class="whatsapp-reminder-btn" type="button" style="flex: 1; margin-top: 0;">
-                        <i class="fab fa-whatsapp"></i> তাগাদা পাঠান
+                <div class="debt-aux-row">
+                    <button id="btn-debt-reminder" class="whatsapp-reminder-btn btn-compact-tool" type="button">
+                        <i class="fab fa-whatsapp"></i> তাগাদা
                     </button>
-                    <button id="btn-debt-statement-pdf" class="btn-debt-secondary" type="button" style="padding: 10px 14px;">
-                        <i class="fas fa-file-pdf" style="color: #ef4444;"></i> খতিয়ান PDF
+                    <button id="btn-debt-statement-pdf" class="btn-debt-secondary btn-compact-tool" type="button">
+                        <i class="fas fa-file-pdf" style="color: #ef4444;"></i> PDF
                     </button>
+                    <span class="debt-formula-hint" title="'দিলাম' মানে পাওনা বাড়ে | 'পেলাম' মানে দেনা বাড়ে/পরিশোধ হলো">
+                        <i class="fas fa-info-circle"></i> হিসাব নিয়ম
+                    </span>
                 </div>
             </div>
 
-            <!-- History List -->
-            <h4 style="margin-bottom: 10px;">ইতিহাস</h4>
-            <ul id="debt-history-list" class="transaction-list" style="flex: 1; overflow-y: auto; min-height: 150px;">
+            <!-- History Header & Scrollable List (Takes Remaining Height) -->
+            <div class="debt-history-section-header">
+                <h4><i class="fas fa-history"></i> লেনদেনের ইতিহাস</h4>
+            </div>
+            <ul id="debt-history-list" class="transaction-list debt-history-scroll-area">
                 <!-- History Items -->
             </ul>
 
