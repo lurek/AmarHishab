@@ -18,7 +18,7 @@
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=3.8">
+    <link rel="stylesheet" href="style.css?v=3.9">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
 </head>
@@ -319,9 +319,20 @@
                         <h4 id="debt-view-total-i-owe">৳0</h4>
                     </div>
                 </div>
-                <div class="action-bar" style="margin-bottom: 15px; text-align: right;">
-                    <button id="refresh-debt" class="primary-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i
-                            class="fas fa-sync"></i> রিফ্রেশ</button>
+                <div class="debt-toolbar">
+                    <div class="debt-filter-row">
+                        <div class="debt-filter-pills">
+                            <button type="button" class="debt-filter-pill active" data-debt-filter="all">সব</button>
+                            <button type="button" class="debt-filter-pill" data-debt-filter="lend">পাবেন</button>
+                            <button type="button" class="debt-filter-pill" data-debt-filter="borrow">দেনা</button>
+                        </div>
+                        <button id="refresh-debt" class="primary-btn" style="padding: 6px 14px; font-size: 0.78rem; border-radius: var(--radius-full, 9999px); white-space: nowrap;"><i
+                                class="fas fa-sync"></i> রিফ্রেশ</button>
+                    </div>
+                    <div class="search-bar" style="margin-bottom: 0;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="debt-search-input" placeholder="নাম বা নম্বর দিয়ে খুঁজুন..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--card-bg); color: var(--text-color); font-size: 0.86rem; outline: none;">
+                    </div>
                 </div>
                 <h3 class="section-title">লেনদেনকারী তালিকা</h3>
                 <ul id="debt-list" class="transaction-list"></ul>
@@ -409,7 +420,7 @@
                     <a href="https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk" class="menu-item" target="_blank"
                         id="menu-download-apk">
                         <i class="fab fa-android color-7"></i>
-                        <span>APK ডাউনলোড (v3.8)</span>
+                        <span id="menu-apk-label">APK ডাউনলোড (v3.9)</span>
                     </a>
                     <button class="menu-item" id="menu-logout">
                         <i class="fas fa-sign-out-alt color-8"></i>
@@ -446,7 +457,7 @@
             </button>
             <button class="nav-item" data-target="history">
                 <i class="fas fa-list"></i>
-                <span>লেনদেনের ইতিহাস</span>
+                <span>হিস্ট্রি</span>
             </button>
             <button class="nav-item" data-target="debt">
                 <i class="fas fa-handshake"></i>
@@ -454,7 +465,7 @@
             </button>
             <button class="nav-item" data-target="recurring">
                 <i class="fas fa-sync-alt"></i>
-                <span style="font-size: 0.65rem;">পুনরাবৃত্তমূলক খরচ</span>
+                <span>রিকারিং</span>
             </button>
             <button class="nav-item" data-target="menu">
                 <i class="fas fa-th-large"></i>
@@ -809,8 +820,18 @@
                     style="background: var(--danger-color); color: white; width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; border: none; cursor: pointer;">লগআউট
                     <i class="fas fa-sign-out-alt"></i></button>
 
-                <p id="app-version-display" style="text-align:center; font-size:0.8rem; color:grey; margin-top: 15px;">
-                    AmarHishab v3.8</p>
+                <div style="text-align: center; margin-top: 15px;">
+                    <p id="app-version-display" style="font-size:0.82rem; color:grey; font-weight: 600; margin-bottom: 8px;">
+                        AmarHishab v3.9</p>
+                    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                        <a id="settings-latest-apk-link" href="https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk" target="_blank" class="btn-debt-secondary" style="font-size: 0.75rem; border-radius: 9999px;">
+                            <i class="fab fa-android" style="color: #22c55e;"></i> সর্বশেষ APK (<span class="latest-version-tag">v3.9</span>)
+                        </a>
+                        <a href="https://github.com/lurek/AmarHishab/releases" target="_blank" class="btn-debt-secondary" style="font-size: 0.75rem; border-radius: 9999px;">
+                            <i class="fas fa-history"></i> পূর্ববর্তী সকল ভার্সন
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div> <!-- Close settings-modal -->
@@ -954,40 +975,52 @@
             <p style="color: var(--secondary-color); font-size: 0.9rem; margin-bottom: 20px;">
                 অফলাইন ব্যবহার এবং ভালো অভিজ্ঞতার জন্য আমাদের অ্যাপটি ডাউনলোড করুন।
             </p>
-            <a href="https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk" target="_blank" class="primary-btn full-width"
-                style="display:inline-block; text-decoration:none;">
-                ডাউনলোড করুন (v3.8)
+            <a id="modal-download-apk-btn" href="https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk" target="_blank" class="primary-btn full-width"
+                style="display:inline-block; text-decoration:none; border-radius: 9999px;">
+                ডাউনলোড করুন (v3.9)
             </a>
+            <div style="margin-top: 12px;">
+                <a href="https://github.com/lurek/AmarHishab/releases" target="_blank" style="font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    <i class="fas fa-code-branch"></i> পূর্ববর্তী সকল ভার্সন দেখুন (Release Archive)
+                </a>
+            </div>
         </div>
     </div>
 
     <!-- Trash / Recycle Bin Modal (New Feature) -->
     <div id="trash-modal" class="modal">
-        <div class="modal-content" style="max-width: 520px;">
-            <div class="modal-header">
-                <div>
-                    <h3>রিসাইকেল বিন</h3>
-                    <p style="font-size: 0.78rem; color: var(--secondary-color); margin-top: 2px;">মুছে ফেলা রেকর্ড ৩০ দিন পর্যন্ত জমা থাকবে</p>
+        <div class="modal-content trash-modal-content" style="max-width: 520px;">
+            <div class="modal-header trash-modal-header">
+                <div class="trash-header-titles">
+                    <h3><i class="fas fa-trash-restore" style="color: #f97316; margin-right: 6px; font-size: 1.05rem;"></i>রিসাইকেল বিন</h3>
+                    <p>মুছে ফেলা রেকর্ড ৩০ দিন পর্যন্ত জমা থাকবে</p>
                 </div>
                 <span class="close-btn" aria-label="Close">&times;</span>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px;">
-                <div class="type-switcher" style="margin-bottom: 0; flex: 1;">
-                    <button class="type-btn trash-filter-btn active" data-filter="all">সব</button>
-                    <button class="type-btn trash-filter-btn" data-filter="expense">খরচ/আয়</button>
-                    <button class="type-btn trash-filter-btn" data-filter="debt">দেনা-পাওনা</button>
-                    <button class="type-btn trash-filter-btn" data-filter="recurring">রিকারিং</button>
+            <div class="type-switcher trash-filter-bar">
+                <button class="type-btn trash-filter-btn active" type="button" data-filter="all">সব</button>
+                <button class="type-btn trash-filter-btn" type="button" data-filter="expense">খরচ/আয়</button>
+                <button class="type-btn trash-filter-btn" type="button" data-filter="debt">দেনা-পাওনা</button>
+                <button class="type-btn trash-filter-btn" type="button" data-filter="recurring">রিকারিং</button>
+            </div>
+
+            <div class="trash-toolbar-row">
+                <span id="trash-summary-text" class="trash-summary-text">মোট ০টি রেকর্ড</span>
+                <button id="empty-trash-btn" class="empty-trash-btn" type="button">
+                    <i class="fas fa-trash-alt"></i> খালি করুন
+                </button>
+            </div>
+
+            <div id="empty-trash-state" class="empty-state empty-trash-box" style="display: none;">
+                <div class="empty-trash-icon-circle">
+                    <i class="fas fa-trash-restore"></i>
                 </div>
-                <button id="empty-trash-btn" class="empty-trash-btn" type="button"><i class="fas fa-trash-alt"></i> খালি করুন</button>
+                <h4>রিসাইকেল বিন সম্পূর্ণ খালি!</h4>
+                <p>কোনো লেনদেন বা হিসাব মুছে ফেললে তা এখানে ৩০ দিন পর্যন্ত সুরক্ষিত থাকবে।</p>
             </div>
 
-            <div id="empty-trash-state" class="empty-state" style="text-align: center; padding: 30px 10px; display: none;">
-                <i class="fas fa-trash-restore" style="font-size: 2.5rem; color: var(--secondary-color); opacity: 0.4; margin-bottom: 10px;"></i>
-                <p style="color: var(--secondary-color); font-size: 0.9rem;">রিসাইকেল বিন সম্পূর্ণ খালি!</p>
-            </div>
-
-            <ul id="trash-items-list" style="max-height: 60vh; overflow-y: auto; list-style: none; padding: 0;">
+            <ul id="trash-items-list" class="trash-items-scroll-list">
                 <!-- Injected by script.js -->
             </ul>
         </div>
@@ -1044,7 +1077,7 @@
             });
     </script>
 
-    <script src="script.js?v=3.8"></script>
+    <script src="script.js?v=3.9"></script>
 </body>
 
 </html>

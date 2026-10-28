@@ -8,7 +8,7 @@
 **All-in-One Smart Personal Finance, Expense Tracker & Digital Customer Khata for Web & Android**
 
 [![Live Web App](https://img.shields.io/badge/🌐_Live_Web_App-amarhishab.web.app-4F46E5?style=for-the-badge&logo=googlechrome&logoColor=white)](https://amarhishab.web.app/)
-[![Download Android APK](https://img.shields.io/badge/📱_Download_APK-v3.8_Release-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk)
+[![Download Android APK](https://img.shields.io/github/v/release/lurek/AmarHishab?color=3DDC84&label=📱%20Download%20Latest%20APK&logo=android&logoColor=white&style=for-the-badge)](https://github.com/lurek/AmarHishab/releases/latest/download/AmarHishab-Release.apk)
 
 [![GitHub Release](https://img.shields.io/github/v/release/lurek/AmarHishab?color=7c3aed&label=Release&style=flat-square)](https://github.com/lurek/AmarHishab/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/lurek/AmarHishab/build-apk.yml?label=APK%20Build&style=flat-square&logo=githubactions)](https://github.com/lurek/AmarHishab/actions)

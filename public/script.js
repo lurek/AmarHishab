@@ -1,5 +1,6 @@
 // --- CONSTANTS ---
-const APP_VERSION = '3.8';
+const APP_VERSION = '3.9';
+const GITHUB_REPO = 'lurek/AmarHishab';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- EMAILJS INIT ---
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fabBtn = document.getElementById('fab-add-transaction');
     const addModal = document.getElementById('add-transaction-modal');
     const saveTransactionBtn = document.getElementById('save-transaction-btn');
-    const typeBtns = document.querySelectorAll('.type-btn');
+    const typeBtns = document.querySelectorAll('#add-transaction-modal .type-btn');
 
     // Additional Modals
     const editModal = document.getElementById('edit-modal');
@@ -257,9 +258,122 @@ document.addEventListener('DOMContentLoaded', () => {
         const verDisplay = document.getElementById('app-version-display');
         if (verDisplay) verDisplay.innerText = 'AmarHishab v' + APP_VERSION;
 
+        // Dynamically sync latest release version & APK download links from GitHub / version.json
+        syncLatestAppVersion();
+
         // Initialize Balance Visibility & Back Button
         updateBalanceEyeIcon();
         setupAndroidBackButton();
+    };
+
+    // --- AUTO-SYNC LATEST GITHUB RELEASE & APK LINKS ---
+    let latestKnownVersion = APP_VERSION;
+    let latestKnownApkUrl = `https://github.com/${GITHUB_REPO}/releases/latest/download/AmarHishab-Release.apk`;
+
+    const compareSemver = (vA, vB) => {
+        const partsA = String(vA || '').replace(/^v/i, '').trim().split('.').map(n => parseInt(n, 10) || 0);
+        const partsB = String(vB || '').replace(/^v/i, '').trim().split('.').map(n => parseInt(n, 10) || 0);
+        const len = Math.max(partsA.length, partsB.length);
+        for (let i = 0; i < len; i++) {
+            const a = partsA[i] || 0;
+            const b = partsB[i] || 0;
+            if (a > b) return 1;
+            if (a < b) return -1;
+        }
+        return 0;
+    };
+
+    const applyLatestReleaseInfo = (versionStr, apkDownloadUrl) => {
+        if (!versionStr) return;
+        const incomingVer = String(versionStr).replace(/^v/i, '').trim();
+        if (!incomingVer) return;
+
+        // Only advance latestKnownVersion if incomingVer >= latestKnownVersion.
+        // Never downgrade to an older GitHub release (e.g. v3.8 when APP_VERSION is already 3.9).
+        if (compareSemver(incomingVer, latestKnownVersion) >= 0) {
+            latestKnownVersion = incomingVer;
+            if (apkDownloadUrl) {
+                latestKnownApkUrl = apkDownloadUrl;
+            }
+        }
+
+        const tagVer = 'v' + latestKnownVersion;
+        const finalUrl = latestKnownApkUrl || `https://github.com/${GITHUB_REPO}/releases/latest/download/AmarHishab-Release.apk`;
+
+        const menuApkBtn = document.getElementById('menu-download-apk');
+        const menuApkLabel = document.getElementById('menu-apk-label');
+        if (menuApkBtn) menuApkBtn.href = finalUrl;
+        if (menuApkLabel) {
+            menuApkLabel.innerText = `APK ডাউনলোড (${tagVer})`;
+        } else if (menuApkBtn) {
+            const span = menuApkBtn.querySelector('span');
+            if (span) span.innerText = `APK ডাউনলোড (${tagVer})`;
+        }
+
+        const modalApkBtn = document.getElementById('modal-download-apk-btn') || document.querySelector('#apk-download-modal a.primary-btn');
+        if (modalApkBtn) {
+            modalApkBtn.href = finalUrl;
+            modalApkBtn.innerText = `ডাউনলোড করুন (${tagVer})`;
+        }
+
+        const settingsLatestLink = document.getElementById('settings-latest-apk-link');
+        if (settingsLatestLink) {
+            settingsLatestLink.href = finalUrl;
+        }
+        document.querySelectorAll('.latest-version-tag').forEach(el => {
+            el.innerText = tagVer;
+        });
+
+        const verDisplay = document.getElementById('app-version-display');
+        if (verDisplay) {
+            if (compareSemver(latestKnownVersion, APP_VERSION) > 0) {
+                verDisplay.innerHTML = `AmarHishab v${APP_VERSION} <span style="color:var(--success-color); font-weight:700;">(নতুন ${tagVer} এসেছে!)</span>`;
+            } else {
+                verDisplay.innerText = `AmarHishab ${tagVer}`;
+            }
+        }
+    };
+
+    const syncLatestAppVersion = async () => {
+        try {
+            // Ensure initial DOM version labels are strictly synchronized to APP_VERSION
+            applyLatestReleaseInfo(APP_VERSION, latestKnownApkUrl);
+
+            // 1. Check local / hosted version.json first (fast, no rate limit)
+            try {
+                const localRes = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (localRes.ok) {
+                    const vData = await localRes.json();
+                    if (vData && vData.version) {
+                        applyLatestReleaseInfo(vData.version, vData.apkUrl || vData.latestUrl);
+                    }
+                }
+            } catch (_) { /* ignore if offline */ }
+
+            // 2. Query GitHub Releases API for live latest version & asset URL
+            const ghRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+                headers: { 'Accept': 'application/vnd.github+json' }
+            });
+            if (ghRes.ok) {
+                const release = await ghRes.json();
+                const tag = release.tag_name || '';
+                let apkAssetUrl = '';
+                if (Array.isArray(release.assets) && release.assets.length > 0) {
+                    // Prefer versioned APK (e.g. AmarHishab-v3.9.apk) so user sees version in downloaded filename
+                    const versionedAsset = release.assets.find(a => a.name && a.name.endsWith('.apk') && a.name !== 'AmarHishab-Release.apk');
+                    const anyApkAsset = release.assets.find(a => a.name && a.name.endsWith('.apk'));
+                    const chosen = versionedAsset || anyApkAsset;
+                    if (chosen && chosen.browser_download_url) {
+                        apkAssetUrl = chosen.browser_download_url;
+                    }
+                }
+                if (tag) {
+                    applyLatestReleaseInfo(tag, apkAssetUrl);
+                }
+            }
+        } catch (err) {
+            console.log("Version sync skipped (offline or rate-limited):", err);
+        }
     };
 
     // --- AUTHENTICATION ---
@@ -701,30 +815,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const li = document.createElement('li');
-                    li.style.cursor = 'pointer'; // Indicate clickable
+                    li.className = 'txn-card';
+                    const amtFormatted = (parseFloat(data.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     li.innerHTML = `
-                    <div class="list-item-left">
-                        <div class="icon-box" style="background: #6f42c1"><i class="fas fa-redo"></i></div>
-                        <div class="item-details">
-                            <h4>${data.name}</h4>
-                            <p>পরবর্তী: ${data.nextDueDate}</p>
+                    <div class="txn-card-top-row">
+                        <div class="txn-card-info">
+                            <div class="icon-box icon-transfer"><i class="fas fa-redo"></i></div>
+                            <div class="txn-title-wrap">
+                                <h4>${data.name}</h4>
+                                <div class="txn-meta-tags">
+                                    ${data.account ? `<span class="txn-tag account"><i class="fas fa-wallet"></i> ${data.account}</span>` : ''}
+                                    ${data.category ? `<span class="txn-tag"><i class="fas fa-tag"></i> ${data.category}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="txn-card-actions">
+                            <button type="button" class="btn-edit-rec icon-btn-round" title="এডিট"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="btn-delete-rec icon-btn-round danger" title="মুছে ফেলুন"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span class="item-amount amount-expense">-৳${data.amount}</span>
-                        <button class="btn-delete-rec" onclick="deleteRecurring('${doc.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; padding:5px;"><i class="fas fa-trash"></i></button>
+                    <div class="txn-card-bottom-row">
+                        <span class="txn-date-label"><i class="far fa-calendar-alt"></i> পরবর্তী: ${data.nextDueDate}</span>
+                        <div class="txn-amount-box">
+                            <span class="item-amount amount-expense">-৳${amtFormatted}</span>
+                        </div>
                     </div>
                 `;
 
-                    // Row Click Logic (Matches Debt List)
-                    li.onclick = (e) => {
-                        // Prevent if delete button clickable
-                        if (e.target.closest('.btn-delete-rec')) {
+                    const delBtn = li.querySelector('.btn-delete-rec');
+                    if (delBtn) {
+                        delBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            return;
-                        }
-                        editRecurring(doc.id);
-                    };
+                            deleteRecurring(doc.id, e);
+                        });
+                    }
+
+                    li.addEventListener('click', (e) => {
+                        if (e.target.closest('.btn-delete-rec')) return;
+                        editRecurring(doc.id, e);
+                    });
 
                     recurringList.appendChild(li);
                 });
@@ -735,21 +864,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Helper Maps separate from window to avoid conflicts, or attach to window
-    window.editRecurring = (id) => {
-        // Need to find data from snapshot or just pass it differently.
-        // For simplicity, let's re-fetch or use quick find if data available.
-        // Actually, better to just let the click on edit button trigger the modal directly 
-        // passing data is complex in inline onclick. 
-        // Let's refactor slightly to closure click, but user asked for delete.
-        // I will stick to inline for delete, and for edit I will fetch doc or find in list.
-        const item = Array.from(recurringList.children).find(el => el.innerHTML.includes(id));
-        // This is getting messy. Let's just re-fetch inside edit for reliability or use a data attribute.
-        // OR better: revert to list item click for edit, and stop propagation for delete.
-    };
-
-    window.deleteRecurring = async (id) => {
-        if (window.event) window.event.stopPropagation();
+    window.deleteRecurring = async (id, evt) => {
+        if (evt && evt.stopPropagation) evt.stopPropagation();
+        else if (window.event && window.event.stopPropagation) window.event.stopPropagation();
         if (!confirm("আপনি কি নিশ্চিত? এটি রিসাইকেল বিনে জমা থাকবে এবং ৩০ দিন পর্যন্ত রিস্টোর করা যাবে।")) return;
         try {
             const docRef = db.collection('users').doc(currentUser.uid).collection('recurring_templates').doc(id);
@@ -766,10 +883,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.editRecurring = async (id) => {
-        event.stopPropagation();
+    window.editRecurring = async (id, evt) => {
+        if (evt && evt.stopPropagation) evt.stopPropagation();
+        else if (window.event && window.event.stopPropagation) window.event.stopPropagation();
         const doc = await db.collection('users').doc(currentUser.uid).collection('recurring_templates').doc(id).get();
-        openEditRecurringModal(id, doc.data());
+        if (doc.exists) openEditRecurringModal(id, doc.data());
     };
 
     // End of helper functions
@@ -1222,6 +1340,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderTransactionItem = (data) => {
         const li = document.createElement('li');
+        li.className = 'txn-card';
         const isIncome = data.type === 'income';
         const isDebt = data.type === 'debt';
         const isRecurring = data.isRecurring || data.autoGenerated;
@@ -1252,24 +1371,58 @@ document.addEventListener('DOMContentLoaded', () => {
             icon = 'fa-sync-alt';
         }
 
-        const accountDisplay = isTransfer ? `${data.account} ➔ ${data.toAccount || ''}` : data.account;
-        const categoryDisplay = data.category && !isTransfer ? '| ' + data.category : '';
+        const accountDisplay = isTransfer ? `${data.account} ➔ ${data.toAccount || ''}` : (data.account || '');
+        const categoryDisplay = data.category && !isTransfer ? data.category : '';
+        const formattedAmt = (parseFloat(data.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         li.innerHTML = `
-            <div class="list-item-left">
-                <div class="icon-box ${iconClass}"><i class="fas ${icon}"></i></div>
-                <div class="item-details">
-                    <h4>${data.name}</h4>
-                    <p>${data.date} | ${accountDisplay} ${categoryDisplay}</p>
+            <!-- Row 1: Title, Account/Category Tags on Left; Action Buttons on Right -->
+            <div class="txn-card-top-row">
+                <div class="txn-card-info">
+                    <div class="icon-box ${iconClass}"><i class="fas ${icon}"></i></div>
+                    <div class="txn-title-wrap">
+                        <h4>${data.name || 'লেনদেন'}</h4>
+                        <div class="txn-meta-tags">
+                            ${accountDisplay ? `<span class="txn-tag account"><i class="fas fa-wallet"></i> ${accountDisplay}</span>` : ''}
+                            ${categoryDisplay ? `<span class="txn-tag"><i class="fas fa-tag"></i> ${categoryDisplay}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="txn-card-actions">
+                    <button type="button" class="btn-edit-txn icon-btn-round" title="এডিট"><i class="fas fa-edit"></i></button>
+                    <button type="button" class="btn-delete-txn icon-btn-round danger" title="মুছে ফেলুন"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="item-amount ${colorClass}">${sign}৳${(parseFloat(data.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                <button onclick="editTransaction('${data.id}')" style="background:none; border:none; color:var(--primary-color); cursor:pointer;"><i class="fas fa-edit"></i></button>
-                <button onclick="deleteTransaction('${data.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer;"><i class="fas fa-trash"></i></button>
+
+            <!-- Row 2: Date on Left; Rounded Amount Pill on Right (Separate Line, No Overlap) -->
+            <div class="txn-card-bottom-row">
+                <span class="txn-date-label"><i class="far fa-calendar-alt"></i> ${data.date || ''}</span>
+                <div class="txn-amount-box">
+                    <span class="item-amount ${colorClass}">${sign}৳${formattedAmt}</span>
+                </div>
             </div>
         `;
-        li.addEventListener('click', () => openEditModal(data));
+
+        const editBtn = li.querySelector('.btn-edit-txn');
+        if (editBtn) {
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(data);
+            });
+        }
+
+        const delBtn = li.querySelector('.btn-delete-txn');
+        if (delBtn) {
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.deleteTransaction(data.id, e);
+            });
+        }
+
+        li.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            openEditModal(data);
+        });
         mainTransactionList.appendChild(li);
     };
 
@@ -1442,8 +1595,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 500);
 
-    // Make deleteTransaction Global
-    window.deleteTransaction = async (id) => {
+    // Make editTransaction & deleteTransaction Global
+    window.editTransaction = async (id, evt) => {
+        if (evt && evt.stopPropagation) evt.stopPropagation();
+        else if (window.event && window.event.stopPropagation) window.event.stopPropagation();
+        const cached = allTransactionsCache.find(t => t.id === id);
+        if (cached) {
+            openEditModal(cached);
+            return;
+        }
+        try {
+            const docSnap = await db.collection('users').doc(currentUser.uid).collection('expenses').doc(id).get();
+            if (docSnap.exists) {
+                openEditModal({ id: docSnap.id, ...docSnap.data() });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    window.deleteTransaction = async (id, evt) => {
+        if (evt && evt.stopPropagation) evt.stopPropagation();
+        else if (window.event && window.event.stopPropagation) window.event.stopPropagation();
         if (!confirm("আপনি কি নিশ্চিত? এটি রিসাইকেল বিনে জমা থাকবে এবং ৩০ দিন পর্যন্ত রিস্টোর করা যাবে।")) return;
         try {
             const docRef = db.collection('users').doc(currentUser.uid).collection('expenses').doc(id);
@@ -2039,10 +2212,17 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast("সেভিংস গোল যোগ হয়েছে");
     });
 
-    window.deleteSavings = async (id) => {
-        if (!confirm('মুছে ফেলতে চান?')) return;
-        await db.collection('users').doc(currentUser.uid).collection('savings').doc(id).delete();
-        await db.collection('users').doc(currentUser.uid).collection('savings').doc(id).delete();
+    window.deleteSavings = async (id, evt) => {
+        if (evt && evt.stopPropagation) evt.stopPropagation();
+        else if (window.event && window.event.stopPropagation) window.event.stopPropagation();
+        if (!confirm('মুছে ফেলতে চান? এটি রিসাইকেল বিনে জমা থাকবে।')) return;
+        const docRef = db.collection('users').doc(currentUser.uid).collection('savings').doc(id);
+        const snap = await docRef.get();
+        if (snap.exists) {
+            await moveToTrash('savings', id, snap.data());
+            await docRef.delete();
+            updateTrashBadge();
+        }
         loadSavingsGoals();
         loadHomeSavings();
     };
@@ -2078,7 +2258,8 @@ document.addEventListener('DOMContentLoaded', () => {
         topExpenseList.innerHTML = '';
         list.forEach(item => {
             const li = document.createElement('li');
-            li.innerHTML = `<div class="list-item-left"><div class="item-details"><h4>${item.name}</h4><p>${item.date}</p></div></div><div class="item-amount amount-expense">৳${item.amount}</div>`;
+            const amtFormatted = (parseFloat(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            li.innerHTML = `<div class="list-item-left"><div class="icon-box icon-expense"><i class="fas fa-arrow-up"></i></div><div class="item-details"><h4>${item.name}</h4><p><i class="far fa-calendar-alt"></i> ${item.date}${item.category ? ` • ${item.category}` : ''}</p></div></div><div class="item-amount amount-expense">-৳${amtFormatted}</div>`;
             topExpenseList.appendChild(li);
         });
     };
@@ -2343,14 +2524,34 @@ document.addEventListener('DOMContentLoaded', () => {
         editModal.classList.add('open');
     };
 
-    const loadDebts = async () => {
-        debtList.innerHTML = '';
-        const sn = await db.collection('users').doc(currentUser.uid).collection('ledgers').get();
-        let owed = 0, iOwe = 0;
-        sn.forEach(doc => {
-            const d = doc.data(); const amt = d.netBalance || 0; if (amt == 0) return;
-            if (amt > 0) owed += amt; else iOwe += Math.abs(amt);
+    let allDebtsCache = [];
+    let currentDebtFilter = 'all';
 
+    const renderDebtListItems = () => {
+        debtList.innerHTML = '';
+        const searchEl = document.getElementById('debt-search-input');
+        const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+        const filtered = allDebtsCache.filter(item => {
+            const amt = item.netBalance || 0;
+            if (amt == 0) return false;
+            if (currentDebtFilter === 'lend' && amt <= 0) return false;
+            if (currentDebtFilter === 'borrow' && amt >= 0) return false;
+            if (q) {
+                const nameMatch = (item.personName || '').toLowerCase().includes(q);
+                const phoneMatch = (item.phone || '').toLowerCase().includes(q) || (item.whatsapp || '').toLowerCase().includes(q);
+                if (!nameMatch && !phoneMatch) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            debtList.innerHTML = '<li style="justify-content:center; color:var(--secondary-color); font-size:0.88rem; padding:24px; cursor:default;">কোন দেনা-পাওনার হিসাব পাওয়া যায়নি</li>';
+            return;
+        }
+
+        filtered.forEach(d => {
+            const amt = d.netBalance || 0;
             let dueBadge = '';
             if (d.dueDate) {
                 const todayStr = getLocalDateString(new Date());
@@ -2363,7 +2564,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (daysLeft <= 3) {
                     dueBadge = `<span class="badge-due-soon"><i class="fas fa-clock"></i> ${daysLeft} দিন বাকি</span>`;
                 } else {
-                    dueBadge = `<span style="font-size:0.72rem; color:var(--secondary-color);"><i class="fas fa-calendar-alt"></i> ${d.dueDate}</span>`;
+                    dueBadge = `<span style="font-size:0.72rem; color:var(--secondary-color); white-space:nowrap;"><i class="fas fa-calendar-alt"></i> ${d.dueDate}</span>`;
                 }
             }
             let cleanDate = d.lastUpdated || '';
@@ -2385,8 +2586,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div class="debt-card-actions">
-                        <button class="btn-edit-debt icon-btn-round" data-id="${doc.id}" title="এডিট"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteDebt('${doc.id}')" class="btn-delete-debt icon-btn-round danger" title="মুছে ফেলুন"><i class="fas fa-trash"></i></button>
+                        <button type="button" class="btn-edit-debt icon-btn-round" data-id="${d.id}" title="এডিট"><i class="fas fa-edit"></i></button>
+                        <button type="button" class="btn-delete-debt icon-btn-round danger" data-id="${d.id}" title="মুছে ফেলুন"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
 
@@ -2403,22 +2604,60 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            // Click to view details (Using onclick for robustness)
+
+            const delBtn = li.querySelector('.btn-delete-debt');
+            if (delBtn) {
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.deleteDebt(d.id, e);
+                });
+            }
+
+            // Click to view details
             li.onclick = (e) => {
-                // If retrieve/edit button was clicked (has class btn-edit-debt)
                 if (e.target.closest('.btn-edit-debt')) {
                     e.stopPropagation();
-                    window.openDebtDetails(doc.id, d);
+                    window.openDebtDetails(d.id, d);
                     return;
                 }
-                // If any other button (like delete)
                 if (e.target.closest('button')) return;
-
-                // Normal row click
-                window.openDebtDetails(doc.id, d);
+                window.openDebtDetails(d.id, d);
             };
             debtList.appendChild(li);
         });
+    };
+
+    // Debt Search & Filter Listeners
+    const debtSearchInput = document.getElementById('debt-search-input');
+    if (debtSearchInput) {
+        debtSearchInput.addEventListener('input', () => renderDebtListItems());
+    }
+    document.querySelectorAll('.debt-filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('.debt-filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            currentDebtFilter = pill.getAttribute('data-debt-filter') || 'all';
+            renderDebtListItems();
+        });
+    });
+
+    const loadDebts = async () => {
+        debtList.innerHTML = '';
+        const sn = await db.collection('users').doc(currentUser.uid).collection('ledgers').get();
+        let owed = 0, iOwe = 0;
+        const items = [];
+        sn.forEach(doc => {
+            const d = doc.data();
+            d.id = doc.id;
+            const amt = d.netBalance || 0;
+            if (amt == 0) return;
+            if (amt > 0) owed = safeMath.add(owed, amt);
+            else iOwe = safeMath.add(iOwe, Math.abs(amt));
+            items.push(d);
+        });
+
+        allDebtsCache = items;
+        renderDebtListItems();
 
         // Update Debt View Summary (Unique IDs)
         const dvOwed = document.getElementById('debt-view-total-owed');
@@ -2441,7 +2680,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.deleteDebt = async (id) => {
+    window.deleteDebt = async (id, evt) => {
+        if (evt && evt.stopPropagation) evt.stopPropagation();
+        else if (window.event && window.event.stopPropagation) window.event.stopPropagation();
         if (!confirm("আপনি কি নিশ্চিত? এটি রিসাইকেল বিনে জমা থাকবে এবং ৩০ দিন পর্যন্ত রিস্টোর করা যাবে।")) return;
         try {
             const ledgerRef = db.collection('users').doc(currentUser.uid).collection('ledgers').doc(id);
@@ -2855,50 +3096,121 @@ document.addEventListener('DOMContentLoaded', () => {
     function debounce(func, timeout = 300) { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => { func.apply(this, args); }, timeout); }; }
 
     // ==========================================
-    // 30-DAY TRASH / RECYCLE BIN SYSTEM
+    // 30-DAY TRASH / RECYCLE BIN SYSTEM (Firestore + LocalStorage Dual-Sync)
     // ==========================================
+    const getLocalTrashKey = () => currentUser ? `amarhishab_trash_${currentUser.uid}` : 'amarhishab_trash_guest';
+
+    const getLocalTrashList = () => {
+        try {
+            const raw = localStorage.getItem(getLocalTrashKey());
+            return raw ? JSON.parse(raw) : [];
+        } catch (_) {
+            return [];
+        }
+    };
+
+    const saveLocalTrashList = (list) => {
+        try {
+            localStorage.setItem(getLocalTrashKey(), JSON.stringify(list));
+        } catch (e) {
+            console.warn("Local trash save warning:", e);
+        }
+    };
+
     const moveToTrash = async (sourceCollection, originalId, data) => {
         if (!currentUser) return;
-        try {
-            const trashRef = db.collection('users').doc(currentUser.uid).collection('trash').doc();
-            const now = new Date();
-            const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days retention
-            const cleanedData = JSON.parse(JSON.stringify(data));
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days retention
+        const cleanedData = JSON.parse(JSON.stringify(data || {}));
+        const trashId = originalId ? `${sourceCollection}_${originalId}` : `trash_${now.getTime()}`;
 
-            await trashRef.set({
-                sourceCollection: sourceCollection,
-                originalId: originalId,
-                data: cleanedData,
-                deletedAt: now.toISOString(),
-                expiresAt: expiresAt.toISOString()
-            });
-            console.log("Moved to trash:", trashRef.id);
+        const trashPayload = {
+            id: trashId,
+            sourceCollection: sourceCollection,
+            originalId: originalId || trashId,
+            data: cleanedData,
+            deletedAt: now.toISOString(),
+            expiresAt: expiresAt.toISOString()
+        };
+
+        // 1. Always save immediately to LocalStorage backup so it never gets lost
+        const localList = getLocalTrashList().filter(item => item.id !== trashId && item.originalId !== originalId);
+        localList.unshift(trashPayload);
+        saveLocalTrashList(localList);
+
+        // 2. Save to Firestore 'trash' collection
+        try {
+            const trashRef = db.collection('users').doc(currentUser.uid).collection('trash').doc(trashId);
+            await trashRef.set(trashPayload);
+            console.log("Moved to trash:", trashId);
         } catch (e) {
-            console.error("Move to trash error:", e);
+            console.warn("Firestore trash write warning (kept in local backup):", e);
+        }
+    };
+
+    const setTrashBadgeUI = (count) => {
+        if (!trashBadgeCount) return;
+        trashBadgeCount.innerText = count;
+        if (count > 0) {
+            trashBadgeCount.classList.remove('hidden');
+            trashBadgeCount.style.display = 'inline-block';
+        } else {
+            trashBadgeCount.classList.add('hidden');
+            trashBadgeCount.style.display = 'none';
         }
     };
 
     const updateTrashBadge = async () => {
         if (!currentUser || !trashBadgeCount) return;
+        const now = new Date().toISOString();
+        const mergedMap = new Map();
+
+        // Include valid local backup items
+        getLocalTrashList().forEach(item => {
+            if (!item.expiresAt || item.expiresAt >= now) {
+                mergedMap.set(item.id || item.originalId, item);
+            }
+        });
+
         try {
             const snap = await db.collection('users').doc(currentUser.uid).collection('trash').get();
-            const count = snap.size;
-            trashBadgeCount.innerText = count;
-            trashBadgeCount.style.display = count > 0 ? 'inline-block' : 'none';
+            snap.forEach(doc => {
+                const d = doc.data();
+                d.id = doc.id;
+                if (!d.expiresAt || d.expiresAt >= now) {
+                    mergedMap.set(doc.id, d);
+                }
+            });
         } catch (e) {
-            console.error("Trash badge error:", e);
+            console.warn("Trash badge Firestore read warning (using local backup):", e);
         }
+
+        setTrashBadgeUI(mergedMap.size);
     };
 
     const loadTrash = async () => {
         if (!currentUser) return;
-        try {
-            if (trashItemsList) {
-                trashItemsList.innerHTML = '<li style="text-align:center; padding:24px; color:var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> লোড হচ্ছে...</li>';
+        if (trashItemsList) {
+            trashItemsList.innerHTML = '<li style="text-align:center; padding:24px; color:var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> লোড হচ্ছে...</li>';
+        }
+
+        const now = new Date().toISOString();
+        const mergedMap = new Map();
+
+        // 1. Load from local backup first
+        const validLocal = [];
+        getLocalTrashList().forEach(item => {
+            if (!item.expiresAt || item.expiresAt >= now) {
+                const key = item.id || `${item.sourceCollection}_${item.originalId}`;
+                item.id = key;
+                mergedMap.set(key, item);
+                validLocal.push(item);
             }
-            const snap = await db.collection('users').doc(currentUser.uid).collection('trash').orderBy('deletedAt', 'desc').get();
-            const items = [];
-            const now = new Date().toISOString();
+        });
+
+        // 2. Load from Firestore and merge
+        try {
+            const snap = await db.collection('users').doc(currentUser.uid).collection('trash').get();
             const expiredDocRefs = [];
 
             snap.forEach(doc => {
@@ -2907,26 +3219,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (d.expiresAt && d.expiresAt < now) {
                     expiredDocRefs.push(doc.ref);
                 } else {
-                    items.push(d);
+                    // Deduplicate by doc.id or originalId
+                    const dupKey = `${d.sourceCollection}_${d.originalId}`;
+                    if (mergedMap.has(dupKey) && dupKey !== doc.id) {
+                        mergedMap.delete(dupKey);
+                    }
+                    mergedMap.set(doc.id, d);
                 }
             });
 
-            // Clean expired items in background
             if (expiredDocRefs.length > 0) {
                 const batch = db.batch();
                 expiredDocRefs.forEach(ref => batch.delete(ref));
-                batch.commit().catch(e => console.error("Auto purge error:", e));
+                batch.commit().catch(e => console.warn("Auto purge warning:", e));
             }
-
-            trashItems = items;
-            renderTrashItems();
-            updateTrashBadge();
         } catch (e) {
-            console.error("Load trash error:", e);
-            if (trashItemsList) {
-                trashItemsList.innerHTML = '<li style="text-align:center; padding:20px; color:var(--danger-color);">লোড করতে সমস্যা হয়েছে</li>';
-            }
+            console.warn("Load trash Firestore warning (falling back to local):", e);
         }
+
+        const items = Array.from(mergedMap.values()).sort((a, b) => {
+            return new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0);
+        });
+
+        saveLocalTrashList(items);
+        trashItems = items;
+        renderTrashItems();
+        setTrashBadgeUI(items.length);
     };
 
     const renderTrashItems = () => {
@@ -2940,6 +3258,15 @@ document.addEventListener('DOMContentLoaded', () => {
             filtered = trashItems.filter(item => item.sourceCollection === 'ledgers');
         } else if (currentTrashFilter === 'recurring') {
             filtered = trashItems.filter(item => item.sourceCollection === 'recurring_templates');
+        }
+
+        const summaryEl = document.getElementById('trash-summary-text');
+        if (summaryEl) {
+            const countBn = filtered.length.toLocaleString('bn-BD');
+            summaryEl.innerText = `মোট ${countBn}টি রেকর্ড`;
+        }
+        if (emptyTrashBtn) {
+            emptyTrashBtn.disabled = (!trashItems || trashItems.length === 0);
         }
 
         if (filtered.length === 0) {
@@ -2959,18 +3286,23 @@ document.addEventListener('DOMContentLoaded', () => {
             let typeLabel = 'খরচ';
             let typeBadgeClass = 'badge-expense';
             let title = d.name || 'লেনদেন';
-            let amountStr = `৳${parseFloat(d.amount || 0).toLocaleString('en-IN')}`;
+            let amountStr = `৳${(parseFloat(d.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
             if (item.sourceCollection === 'ledgers') {
                 typeLabel = 'দেনা-পাওনা';
                 typeBadgeClass = 'badge-debt';
                 title = d.personName || 'দেনা-পাওনা';
-                const bal = d.netBalance || 0;
-                amountStr = `${bal > 0 ? 'পাবেন' : 'দিতে হবে'} ৳${Math.abs(bal).toLocaleString('en-IN')}`;
+                const bal = parseFloat(d.netBalance) || 0;
+                amountStr = `${bal > 0 ? 'পাবেন' : 'দিতে হবে'} ৳${Math.abs(bal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             } else if (item.sourceCollection === 'recurring_templates') {
                 typeLabel = 'রিকারিং';
                 typeBadgeClass = 'badge-recurring';
                 title = d.name || 'রিকারিং খরচ';
+            } else if (item.sourceCollection === 'savings') {
+                typeLabel = 'সেভিংস গোল';
+                typeBadgeClass = 'badge-income';
+                title = d.name || 'সেভিংস গোল';
+                amountStr = `🎯 ৳${(parseFloat(d.target) || 0).toLocaleString('en-IN')}`;
             } else if (d.type === 'income') {
                 typeLabel = 'আয়';
                 typeBadgeClass = 'badge-income';
@@ -3002,14 +3334,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="trash-item-amount">${amountStr}</div>
                 </div>
                 <div class="trash-item-actions">
-                    <button class="btn-restore-trash" onclick="restoreTrashItem('${item.id}')">
+                    <button type="button" class="btn-restore-trash" data-id="${item.id}">
                         <i class="fas fa-undo-alt"></i> রিস্টোর
                     </button>
-                    <button class="btn-perm-delete-trash" onclick="permanentDeleteTrash('${item.id}')">
-                        <i class="fas fa-trash-alt"></i> মুছে ফেলুন
+                    <button type="button" class="btn-perm-delete-trash" data-id="${item.id}">
+                        <i class="fas fa-trash-alt"></i> স্থায়ীভাবে মুছুন
                     </button>
                 </div>
             `;
+
+            const restoreBtn = li.querySelector('.btn-restore-trash');
+            if (restoreBtn) {
+                restoreBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.restoreTrashItem(item.id);
+                });
+            }
+            const permDelBtn = li.querySelector('.btn-perm-delete-trash');
+            if (permDelBtn) {
+                permDelBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.permanentDeleteTrash(item.id);
+                });
+            }
 
             trashItemsList.appendChild(li);
         });
@@ -3018,16 +3365,24 @@ document.addEventListener('DOMContentLoaded', () => {
     window.restoreTrashItem = async (trashDocId) => {
         if (!currentUser) return;
         try {
+            let trashData = trashItems.find(item => item.id === trashDocId);
             const trashRef = db.collection('users').doc(currentUser.uid).collection('trash').doc(trashDocId);
-            const trashSnap = await trashRef.get();
-            if (!trashSnap.exists) {
+
+            if (!trashData) {
+                try {
+                    const trashSnap = await trashRef.get();
+                    if (trashSnap.exists) trashData = trashSnap.data();
+                } catch (_) { /* fallback to local */ }
+            }
+
+            if (!trashData) {
                 showToast("রেকর্ডটি পাওয়া যায়নি", "error");
                 loadTrash();
                 return;
             }
 
-            const trashData = trashSnap.data();
-            const { sourceCollection, originalId, data } = trashData;
+            const { sourceCollection, originalId } = trashData;
+            const data = JSON.parse(JSON.stringify(trashData.data || {}));
             const userRef = db.collection('users').doc(currentUser.uid);
 
             if (sourceCollection === 'expenses') {
@@ -3042,6 +3397,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetRef = originalId ? userRef.collection('recurring_templates').doc(originalId) : userRef.collection('recurring_templates').doc();
                 await targetRef.set(data);
                 loadRecurringTemplates();
+            } else if (sourceCollection === 'savings') {
+                const targetRef = originalId ? userRef.collection('savings').doc(originalId) : userRef.collection('savings').doc();
+                await targetRef.set(data);
+                loadSavingsGoals();
+                loadHomeSavings();
             } else if (sourceCollection === 'ledgers') {
                 const targetRef = originalId ? userRef.collection('ledgers').doc(originalId) : userRef.collection('ledgers').doc();
                 const historyData = data._subcollectionHistory || [];
@@ -3049,7 +3409,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await targetRef.set(data);
 
-                // Restore subcollection history
                 for (const h of historyData) {
                     if (h.id && h.data) {
                         await targetRef.collection('history').doc(h.id).set(h.data);
@@ -3059,7 +3418,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadDashboard();
             }
 
-            await trashRef.delete();
+            // Remove from local backup & Firestore trash
+            const updatedLocal = getLocalTrashList().filter(item => item.id !== trashDocId && item.originalId !== originalId);
+            saveLocalTrashList(updatedLocal);
+            try { await trashRef.delete(); } catch (_) {}
+
             showToast("সফলভাবে রিস্টোর করা হয়েছে!", "success");
             loadTrash();
         } catch (e) {
@@ -3071,7 +3434,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.permanentDeleteTrash = async (trashDocId) => {
         if (!confirm("স্থায়ীভাবে মুছে ফেলতে চান? এটি আর কখনোই পুনরুদ্ধার করা যাবে না।")) return;
         try {
-            await db.collection('users').doc(currentUser.uid).collection('trash').doc(trashDocId).delete();
+            const targetItem = trashItems.find(i => i.id === trashDocId);
+            const updatedLocal = getLocalTrashList().filter(item => item.id !== trashDocId && (!targetItem || item.originalId !== targetItem.originalId));
+            saveLocalTrashList(updatedLocal);
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('trash').doc(trashDocId).delete();
+            } catch (_) {}
             showToast("স্থায়ীভাবে মুছে ফেলা হয়েছে");
             loadTrash();
         } catch (e) {
@@ -3087,10 +3455,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!confirm("রিসাইকেল বিনের সব আইটেম স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।")) return;
         try {
-            const batch = db.batch();
-            const snap = await db.collection('users').doc(currentUser.uid).collection('trash').get();
-            snap.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+            saveLocalTrashList([]);
+            try {
+                const batch = db.batch();
+                const snap = await db.collection('users').doc(currentUser.uid).collection('trash').get();
+                snap.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            } catch (_) {}
             showToast("রিসাইকেল বিন সম্পূর্ণ খালি করা হয়েছে");
             loadTrash();
         } catch (e) {
